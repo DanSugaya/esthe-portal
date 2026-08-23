@@ -4,7 +4,7 @@ import Link from 'next/link'
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // salons テーブルと、それに紐づく menus テーブルを取得
+  // salons テーブルと、それに紐づく menus テーブルを取得（statusが'approved'のもののみ）
   const { data: salons, error } = await supabase
     .from('salons')
     .select(`
@@ -19,6 +19,7 @@ export default async function HomePage() {
         price
       )
     `)
+    .eq('status', 'approved')
 
   if (error) {
     return (
