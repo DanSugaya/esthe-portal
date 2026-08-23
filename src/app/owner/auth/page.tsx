@@ -1,119 +1,95 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function OwnerAuthPage() {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [salonName, setSalonName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const router = useRouter()
+  const [isLogin, setIsLogin] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
-  const router = useRouter();
-  const supabase = createClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage('');
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      if (isSignUp) {
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      if (isLogin) {
+        // 1. ログイン処理
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
           email,
           password,
-        });
+        })
 
-        if (signUpError) throw signUpError;
+        if (authError) throw new Error(authError.message)
 
-        if (authData.user) {
-          const { error: insertError } = await supabase.from('salons').insert([
-            {
-              id: authData.user.id,
-              name: salonName,
-              status: 'pending',
-            },
-          ]);
+        // 2. 店舗のステータスを取得して振り分け
+        const { data: salon, error: salonError } = await supabase
+          .from('salons')
+          .select('status')
+          .eq('owner_id', authData.user.id)
+          .single()
 
-          if (insertError) throw insertError;
+        if (salonError || !salon || salon.status === 'pending') {
+          router.push('/owner/pending')
+        } else if (salon.status === 'approved') {
+          router.push('/owner/dashboard')
+        } else {
+          alert('アカウントの状態を確認できません。運営にお問い合わせください。')
         }
-
-        alert('登録申請が完了しました。');
-        router.push('/owner/dashboard');
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) throw signInError;
-
-        router.push('/owner/dashboard');
+        // 新規掲載申請ページへリダイレクト
+        router.push('/owner/register')
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || 'エラーが発生しました。');
+    } catch (err: any) {
+      alert(err.message || '認証エラーが発生しました')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 space-y-6">
-        <h1 className="text-2xl font-bold text-center text-gray-800">
-          {isSignUp ? '店舗オーナー新規登録' : '店舗オーナーログイン'}
-        </h1>
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="max-w-sm w-full bg-white p-6 rounded-xl shadow-sm border space-y-4">
+        
+        <div className="text-center">
+          <h1 className="text-lg font-bold text-slate-800">
+            {isLogin ? '店舗オーナー ログイン' : '店舗掲載のお申し込み'}
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            {isLogin ? '管理画面へアクセスします' : '新規掲載申請フォームへ進みます'}
+          </p>
+        </div>
 
-        {errorMessage && (
-          <div className="bg-red-50 text-red-600 text-sm p-3 rounded">
-            {errorMessage}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                サロン名
-              </label>
-              <input
-                type="text"
-                required
-                value={salonName}
-                onChange={(e) => setSalonName(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="サロン名を入力"
-              />
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              メールアドレス
-            </label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">メールアドレス</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="example@mail.com"
+              className="w-full rounded border border-slate-300 p-2 text-xs outline-none focus:ring-1 focus:ring-slate-800"
+              placeholder="owner@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              パスワード
-            </label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">パスワード</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-slate-300 p-2 text-xs outline-none focus:ring-1 focus:ring-slate-800"
               placeholder="••••••••"
             />
           </div>
@@ -121,27 +97,29 @@ export default function OwnerAuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50"
+            className="w-full py-2.5 bg-slate-900 text-white rounded text-xs font-bold hover:bg-slate-800 transition disabled:opacity-50"
           >
-            {loading ? '処理中...' : isSignUp ? '申請を送信' : 'ログイン'}
+            {loading ? '処理中...' : isLogin ? 'ログイン' : '申請フォームへ進む'}
           </button>
         </form>
 
-        <div className="text-center pt-2">
+        <div className="pt-2 border-t text-center space-y-2">
           <button
             type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setErrorMessage('');
-            }}
-            className="text-sm text-blue-600 hover:underline"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-xs text-slate-600 hover:underline"
           >
-            {isSignUp
-              ? 'すでにアカウントをお持ちの方はこちら（ログイン）'
-              : '新規掲載申請（新規登録）はこちら'}
+            {isLogin ? '新規掲載申請はこちら' : 'すでにアカウントをお持ちの方（ログイン）'}
           </button>
+
+          <div>
+            <Link href="/" className="text-xs text-slate-400 hover:underline">
+              トップページに戻る
+            </Link>
+          </div>
         </div>
+
       </div>
-    </div>
-  );
+    </main>
+  )
 }
