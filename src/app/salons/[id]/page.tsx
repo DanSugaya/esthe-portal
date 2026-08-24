@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import ReviewForm from '@/components/ReviewForm'
 
 interface PageProps {
   params: Promise<{
@@ -178,6 +179,24 @@ export default async function SalonDetailPage({ params }: PageProps) {
           <span className="text-xs text-gray-500 font-normal">{reviews.length}件の投稿</span>
         </h2>
 
+        {/* 投稿フォーム表示制御 */}
+        {session ? (
+          <ReviewForm salonId={salon.id} menus={salon.menus || []} />
+        ) : (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center mb-8">
+            <p className="text-sm text-emerald-800 font-medium mb-2">
+              口コミを投稿するにはログインが必要です
+            </p>
+            <Link
+              href="/login"
+              className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-md transition"
+            >
+              ログインして投稿する
+            </Link>
+          </div>
+        )}
+
+        {/* 口コミ一覧表示 */}
         {reviews.length === 0 ? (
           <p className="text-gray-500 text-sm">まだ口コミはありません。</p>
         ) : (
@@ -186,7 +205,7 @@ export default async function SalonDetailPage({ params }: PageProps) {
               <div key={review.id} className="border-b pb-6 last:border-b-0 last:pb-0">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    {/* 星評価 */}
+                    {/* 星評価（非ログイン時でも表示される） */}
                     <div className="text-amber-400 font-bold text-base">
                       {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
                     </div>
@@ -224,16 +243,24 @@ export default async function SalonDetailPage({ params }: PageProps) {
                     {review.comment}
                   </p>
                 ) : (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center my-2">
-                    <p className="text-xs text-slate-500 mb-2">
-                      🔒 口コミの本文を読むにはログインが必要です
+                  <div className="relative overflow-hidden rounded-lg border border-slate-100 p-3 bg-slate-50/50 my-2">
+                    {/* モザイク（ぼかし）テキストエリア：実際の本文を漏洩させないためダミーテキストを表示 */}
+                    <p className="text-sm text-gray-400 select-none blur-[4px] pointer-events-none line-clamp-3 leading-relaxed">
+                      素晴らしい施術で大変満足しました。店内の雰囲気も落ち着いていてリラックスできます。担当のスタッフの方も親切に対応してくださり、また利用したいと思います。
                     </p>
-                    <Link
-                      href="/login"
-                      className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-md transition"
-                    >
-                      ログインしてコメントを読む
-                    </Link>
+
+                    {/* オーバーレイ案内 */}
+                    <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[1px] flex flex-col items-center justify-center p-2">
+                      <p className="text-xs font-semibold text-slate-700 mb-1.5 drop-shadow-sm">
+                        🔒 口コミを読むにはログインが必要です
+                      </p>
+                      <Link
+                        href="/login"
+                        className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-md transition shadow-sm"
+                      >
+                        ログインする
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>

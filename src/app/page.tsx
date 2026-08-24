@@ -4,8 +4,8 @@ import Link from 'next/link'
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // salons テーブルと、それに紐づく menus テーブルを取得（statusが'approved'のもののみ）
-  const { data: salons, error } = await supabase
+  // salons テーブルと、紐づく menus、reviews テーブルを取得
+  const { data: rawSalons, error } = await supabase
     .from('salons')
     .select(`
       id,
@@ -17,6 +17,9 @@ export default async function HomePage() {
         name,
         duration,
         price
+      ),
+      reviews (
+        rating
       )
     `)
     .eq('status', 'approved')
@@ -28,6 +31,22 @@ export default async function HomePage() {
       </div>
     )
   }
+
+  // 評価の平均値と件数を計算してサロンデータに追加
+  const salons = rawSalons?.map((salon: any) => {
+    const reviews = salon.reviews || []
+    const reviewCount = reviews.length
+    const avgRating =
+      reviewCount > 0
+        ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewCount
+        : 0
+
+    return {
+      ...salon,
+      avgRating: Number(avgRating.toFixed(1)),
+      reviewCount,
+    }
+  })
 
   return (
     <main className="max-w-6xl mx-auto p-6">
@@ -63,11 +82,24 @@ export default async function HomePage() {
               <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
                   {/* サロン名リンク */}
-                  <h2 className="text-xl font-bold text-gray-800 mb-2 hover:text-emerald-600 transition">
+                  <h2 className="text-xl font-bold text-gray-800 mb-1 hover:text-emerald-600 transition">
                     <Link href={`/salons/${salon.id}`}>
                       {salon.name}
                     </Link>
                   </h2>
+
+                  {/* 評価（星＋平均点＋件数） */}
+                  <div className="flex items-center gap-1.5 mb-3 text-sm">
+                    {salon.reviewCount > 0 ? (
+                      <>
+                        <span className="text-amber-500 font-bold">★ {salon.avgRating}</span>
+                        <span className="text-gray-400 text-xs">({salon.reviewCount}件)</span>
+                      </>
+                    ) : (
+                      <span className="text-gray-400 text-xs">★ まだ評価がありません</span>
+                    )}
+                  </div>
+
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                     {salon.description}
                   </p>
