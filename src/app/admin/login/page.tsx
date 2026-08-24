@@ -28,10 +28,18 @@ export default function AdminLoginPage() {
 
       if (error) throw error
 
-      // 2. メタデータの role をチェック
-      const userRole = data.user.user_metadata?.role
+      // 2. profiles テーブルから role を取得してチェック
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
 
-      if (userRole !== 'admin') {
+      if (profileError) {
+        throw new Error(`プロフィール情報の取得に失敗しました: ${profileError.message}`)
+      }
+
+      if (profile?.role !== 'admin') {
         // 管理者でない場合はログアウトさせて弾く
         await supabase.auth.signOut()
         alert('管理者権限がありません。')
