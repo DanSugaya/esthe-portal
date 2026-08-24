@@ -24,13 +24,16 @@ import {
   Edit,
   Trash2,
   Save,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'salon' | 'menus'>('overview');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,6 +50,7 @@ export default function OwnerDashboard() {
     description: '',
     phone: '',
     address: '',
+    header_image_url: '',
   });
 
   // メニューモーダル用ステート
@@ -87,6 +91,7 @@ export default function OwnerDashboard() {
           description: salonData.description || '',
           phone: salonData.phone || '',
           address: salonData.address || '',
+          header_image_url: salonData.header_image_url || '',
         });
 
         // メニュー一覧取得
@@ -106,6 +111,35 @@ export default function OwnerDashboard() {
     }
   };
 
+  // 店舗ヘッダー画像のアップロード処理
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      if (!e.target.files || e.target.files.length === 0) return;
+
+      const file = e.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `headers/${salon.id}-${Math.random()}.${fileExt}`;
+
+      // Supabase Storage にアップロード
+      const { error: uploadError } = await supabase.storage
+        .from('salons')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 公開用URLを取得
+      const { data } = supabase.storage.from('salons').getPublicUrl(filePath);
+
+      setSalonForm((prev) => ({ ...prev, header_image_url: data.publicUrl }));
+      alert('画像をアップロードしました。');
+    } catch (err: any) {
+      alert(`画像アップロードエラー: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // 2. 店舗情報の保存（salons 更新）
   const handleSaveSalon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +154,7 @@ export default function OwnerDashboard() {
           description: salonForm.description,
           phone: salonForm.phone,
           address: salonForm.address,
+          header_image_url: salonForm.header_image_url,
         })
         .eq('id', salon.id);
 
@@ -335,6 +370,38 @@ export default function OwnerDashboard() {
               </div>
 
               <form onSubmit={handleSaveSalon} className="space-y-4">
+                {/* 店舗イメージヘッダープレビュー & アップロード */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-2">店舗イメージヘッダー</label>
+                  <div className="relative w-full h-48 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center group">
+                    {salonForm.header_image_url ? (
+                      <img
+                        src={salonForm.header_image_url}
+                        alt="店舗ヘッダー"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center text-slate-400">
+                        <ImageIcon className="h-8 w-8 mb-1" />
+                        <span className="text-xs">画像が設定されていません</span>
+                      </div>
+                    )}
+
+                    {/* アップロード用ボタンオーバーレイ */}
+                    <label className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white text-xs font-bold gap-2">
+                      <Upload className="h-4 w-4" />
+                      {uploading ? 'アップロード中...' : '画像を変換・変更'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploading}
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">サロン名</label>
                   <input
@@ -383,7 +450,7 @@ export default function OwnerDashboard() {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || uploading}
                     className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm transition disabled:opacity-50 cursor-pointer"
                   >
                     <Save className="h-4 w-4" />
