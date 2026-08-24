@@ -40,7 +40,7 @@ export default function OwnerRegisterPage() {
 
     try {
       // 1. 店舗オーナーのアカウント作成
-      const { error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -53,24 +53,17 @@ export default function OwnerRegisterPage() {
 
       if (authError) throw new Error(`アカウント作成エラー: ${authError.message}`)
 
-      // 2. セッションを確実に確立するため明示的にログインを実行
-      const { data: sessionData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      })
-
-      if (loginError || !sessionData.user) {
-        throw new Error('ログインセッションの取得に失敗しました。')
+      const user = authData.user
+      if (!user) {
+        throw new Error('ユーザーアカウントの生成に失敗しました。')
       }
 
-      const userId = sessionData.user.id
-
-      // 3. salons テーブルへデータ挿入 (statusは初期値pending、owner_idを紐付け)
+      // 2. salons テーブルへデータ挿入 (statusは初期値pending、owner_idを紐付け)
       const { data: salonData, error: salonError } = await supabase
         .from('salons')
         .insert([
           {
-            owner_id: userId,
+            owner_id: user.id,
             name: formData.salonName,
             description: formData.description,
             image_url: formData.imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef',
@@ -82,7 +75,7 @@ export default function OwnerRegisterPage() {
 
       if (salonError) throw new Error(`店舗登録エラー: ${salonError.message}`)
 
-      // 4. menus テーブルへ初期メニュー挿入
+      // 3. menus テーブルへ初期メニュー挿入
       if (formData.menuTitle && salonData) {
         const { error: menuError } = await supabase.from('menus').insert([
           {
