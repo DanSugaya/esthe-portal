@@ -53,7 +53,7 @@ export default function OwnerDashboard() {
     header_image_url: '',
   });
 
-  // メニューモーダル用ステート
+  // メニューモーダル用ステート（すべて初期値は定義済み値）
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<any>(null);
   const [menuForm, setMenuForm] = useState({
@@ -87,11 +87,11 @@ export default function OwnerDashboard() {
       if (salonData) {
         setSalon(salonData);
         setSalonForm({
-          name: salonData.name || '',
-          description: salonData.description || '',
-          phone: salonData.phone || '',
-          address: salonData.address || '',
-          header_image_url: salonData.header_image_url || '',
+          name: salonData.name ?? '',
+          description: salonData.description ?? '',
+          phone: salonData.phone ?? '',
+          address: salonData.address ?? '',
+          header_image_url: salonData.header_image_url ?? '',
         });
 
         // メニュー一覧取得
@@ -168,15 +168,15 @@ export default function OwnerDashboard() {
     }
   };
 
-  // 3. メニューモーダルの開閉
+  // 3. メニューモーダルの開閉（null/undefined を空文字で保護）
   const openMenuModal = (menu: any = null) => {
     if (menu) {
       setEditingMenu(menu);
       setMenuForm({
-        name: menu.name || '',
-        description: menu.description || '',
-        price: menu.price || 0,
-        duration: menu.duration || 60,
+        name: menu.name ?? '',
+        description: menu.description ?? '',
+        price: menu.price ?? 0,
+        duration: menu.duration ?? 60,
       });
     } else {
       setEditingMenu(null);
@@ -280,33 +280,30 @@ export default function OwnerDashboard() {
         <nav className="flex-1 p-4 space-y-1">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'overview'
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'overview'
                 ? 'bg-indigo-600 text-white'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             <BarChart2 className="h-5 w-5" />
             ダッシュボード
           </button>
           <button
             onClick={() => setActiveTab('salon')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'salon'
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'salon'
                 ? 'bg-indigo-600 text-white'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             <Store className="h-5 w-5" />
             店舗情報編集
           </button>
           <button
             onClick={() => setActiveTab('menus')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'menus'
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'menus'
                 ? 'bg-indigo-600 text-white'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             <UtensilsCrossed className="h-5 w-5" />
             メニュー管理
@@ -407,7 +404,7 @@ export default function OwnerDashboard() {
                   <input
                     type="text"
                     required
-                    value={salonForm.name}
+                    value={salonForm.name || ''}
                     onChange={(e) => setSalonForm({ ...salonForm, name: e.target.value })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   />
@@ -417,7 +414,7 @@ export default function OwnerDashboard() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">説明文</label>
                   <textarea
                     rows={4}
-                    value={salonForm.description}
+                    value={salonForm.description || ''}
                     onChange={(e) => setSalonForm({ ...salonForm, description: e.target.value })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                     placeholder="店舗のコンセプトやアピールポイント"
@@ -429,7 +426,7 @@ export default function OwnerDashboard() {
                     <label className="block text-xs font-bold text-slate-700 mb-1">電話番号</label>
                     <input
                       type="text"
-                      value={salonForm.phone}
+                      value={salonForm.phone || ''}
                       onChange={(e) => setSalonForm({ ...salonForm, phone: e.target.value })}
                       className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="03-1234-5678"
@@ -439,7 +436,7 @@ export default function OwnerDashboard() {
                     <label className="block text-xs font-bold text-slate-700 mb-1">住所</label>
                     <input
                       type="text"
-                      value={salonForm.address}
+                      value={salonForm.address || ''}
                       onChange={(e) => setSalonForm({ ...salonForm, address: e.target.value })}
                       className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="東京都港区..."
@@ -547,10 +544,10 @@ export default function OwnerDashboard() {
                 <input
                   type="text"
                   required
-                  value={menuForm.name}
+                  value={menuForm.name || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, name: e.target.value })}
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
-                  placeholder="カット + カラー"
+                  placeholder="施術メニュー"
                 />
               </div>
 
@@ -558,7 +555,7 @@ export default function OwnerDashboard() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">説明</label>
                 <textarea
                   rows={3}
-                  value={menuForm.description}
+                  value={menuForm.description || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, description: e.target.value })}
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   placeholder="施術内容の詳細"
@@ -572,7 +569,7 @@ export default function OwnerDashboard() {
                     type="number"
                     required
                     min={0}
-                    value={menuForm.price}
+                    value={menuForm.price ?? 0}
                     onChange={(e) => setMenuForm({ ...menuForm, price: Number(e.target.value) })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   />
@@ -583,7 +580,7 @@ export default function OwnerDashboard() {
                     type="number"
                     required
                     min={0}
-                    value={menuForm.duration}
+                    value={menuForm.duration ?? 60}
                     onChange={(e) => setMenuForm({ ...menuForm, duration: Number(e.target.value) })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   />

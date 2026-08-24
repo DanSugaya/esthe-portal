@@ -10,11 +10,11 @@ export default async function HomePage() {
     .select(`
       id,
       name,
-      image_url,
+      header_image_url,
       description,
       menus (
         id,
-        title,
+        name,
         duration,
         price
       )
@@ -47,9 +47,9 @@ export default async function HomePage() {
             >
               {/* サロン画像リンク */}
               <Link href={`/salons/${salon.id}`} className="block relative h-48 w-full bg-gray-100 overflow-hidden group">
-                {salon.image_url ? (
+                {salon.header_image_url ? (
                   <img
-                    src={salon.image_url}
+                    src={salon.header_image_url}
                     alt={salon.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                   />
@@ -85,7 +85,7 @@ export default async function HomePage() {
                           className="text-sm flex justify-between items-center text-gray-700 bg-gray-50 p-2 rounded"
                         >
                           <div>
-                            <span className="font-medium block">{menu.title}</span>
+                            <span className="font-medium block">{menu.name}</span>
                             <span className="text-xs text-gray-500">{menu.duration}分</span>
                           </div>
                           <span className="font-semibold text-emerald-600">
