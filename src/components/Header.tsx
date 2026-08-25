@@ -15,7 +15,7 @@ export default async function Header() {
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* ロゴ / サイト名 */}
         <Link href="/" className="text-xl font-bold text-emerald-600 hover:opacity-80 transition">
-          Esthe Portal
+          埼玉メンズエステ情報館
         </Link>
 
         {/* ナビゲーション */}
