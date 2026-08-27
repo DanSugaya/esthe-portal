@@ -13,7 +13,7 @@ export default async function AreaPage({ params }: PageProps) {
   const { area_slug, slug } = await params
   const supabase = await createClient()
 
-  // 1. area_slug と slug の両方が一致するエリア情報を取得
+  // 1. スラグから対象のエリア情報を取得（例: area_slug='saitama', slug='omiya' → city='大宮'）
   const { data: location, error: locationError } = await supabase
     .from('use_locations')
     .select('*')
@@ -25,16 +25,20 @@ export default async function AreaPage({ params }: PageProps) {
     notFound()
   }
 
-  // 2. 該当エリアのサロン一覧を取得
-  const { data: salons } = await supabase
+  // 2. salons テーブルの area カラム（'大宮'）または location_id と一致するサロンを取得
+  const { data: salons, error: salonsError } = await supabase
     .from('salons')
     .select('*')
-    .eq('location_id', location.id)
+    .or(`area.eq.${location.city},location_id.eq.${location.id}`)
+
+  if (salonsError) {
+    console.error('サロン取得エラー:', salonsError)
+  }
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">
-        {location.name}のサロン一覧
+        {location.city || location.name}のサロン一覧
       </h1>
 
       {salons && salons.length > 0 ? (
@@ -54,7 +58,7 @@ export default async function AreaPage({ params }: PageProps) {
         </div>
       ) : (
         <p className="text-gray-500">
-          現在、このエリアに登録されているサロンはありません。
+          現在、このエリア（{location.city}）に登録されているサロンはありません。
         </p>
       )}
     </main>
