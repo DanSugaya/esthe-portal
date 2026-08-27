@@ -13,6 +13,7 @@ type Banner = {
   title: string;
   image_url: string;
   link_url: string;
+  type: string;
 };
 
 export default function RotationBanner() {
@@ -22,14 +23,16 @@ export default function RotationBanner() {
 
   useEffect(() => {
     const fetchBanners = async () => {
+      // type が 'main' のバナーのみを取得
       const { data, error } = await supabase
         .from('banners')
         .select('*')
         .eq('is_active', true)
+        .eq('type', 'main')
         .order('sort_order', { ascending: true });
 
       if (error) {
-        console.error('バナーの取得に失敗しました:', error);
+        console.error('メインバナーの取得に失敗しました:', error);
       } else if (data) {
         setBanners(data);
       }
@@ -42,7 +45,6 @@ export default function RotationBanner() {
   if (loading || banners.length === 0) return null;
 
   return (
-    // my-4 や py などの上下余白を排除し、w-full で横幅いっぱいに指定
     <div className="w-full relative">
       <Swiper
         modules={[Autoplay, Pagination]}

@@ -13,6 +13,7 @@ type Banner = {
   title: string;
   image_url: string;
   link_url: string;
+  type: string;
 };
 
 export default function SubBannerSlider() {
@@ -22,7 +23,7 @@ export default function SubBannerSlider() {
 
   useEffect(() => {
     const fetchBanners = async () => {
-      // type が 'sub' かつ有効なバナーを取得
+      // type が 'sub' のバナーのみを取得
       const { data, error } = await supabase
         .from('banners')
         .select('*')
@@ -47,9 +48,9 @@ export default function SubBannerSlider() {
     <div className="w-full pt-1 pb-2">
       <Swiper
         modules={[FreeMode]}
-        slidesPerView={4.2} // 4枚＋次の画像をちらっと見せてスライドを促す
-        spaceBetween={4}   // バナー同士の隙間を狭く設定
-        freeMode={true}    // 滑らかな手動スクロールを有効化
+        slidesPerView={4.2}
+        spaceBetween={4}
+        freeMode={true}
         className="w-full"
       >
         {banners.map((banner) => (

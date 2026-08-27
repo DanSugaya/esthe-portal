@@ -8,7 +8,7 @@ export default function Footer() {
           {/* ブランド情報 */}
           <div>
             <Link href="/" className="text-lg font-bold text-white hover:opacity-80 transition">
-              Esthe Portal
+              埼玉メンズエステ情報館
             </Link>
             <p className="text-xs text-slate-400 mt-2 leading-relaxed">
               自分にぴったりのエステサロンが見つかるポータルサイト
