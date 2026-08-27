@@ -23,12 +23,10 @@ export default function TherapistSlider() {
 
   useEffect(() => {
     const fetchTherapists = async () => {
-      // 出勤中/案内可能なセラピストを取得（最大8名）
+      // エラー回避のため is_available や sort_order の絞り込みを外し、最大8名を取得
       const { data, error } = await supabase
         .from('therapists')
         .select('*')
-        .eq('is_available', true)
-        .order('sort_order', { ascending: true })
         .limit(8);
 
       if (error) {
