@@ -4,40 +4,55 @@ import Link from 'next/link'
 import { MapPin } from 'lucide-react'
 
 export default async function AreaMenu() {
-  const supabase = await createClient()
+  let locations: any[] | null = null
+  let fetchError: string | null = null
 
-  // 1. use_locations テーブルからデータ取得
-  const { data: locations, error } = await supabase
-    .from('use_locations')
-    .select(`
-      id,
-      city,
-      area_group,
-      area_slug,
-      slug,
-      salons ( id )
-    `)
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('use_locations')
+      .select(`
+        id,
+        city,
+        area_group,
+        area_slug,
+        slug,
+        salons ( id )
+      `)
 
-  // エラー時やデータが空のときのデバッグログ
-  if (error) {
-    console.error('Supabase Fetch Error:', error)
+    if (error) {
+      fetchError = error.message
+    } else {
+      locations = data
+    }
+  } catch (err: any) {
+    fetchError = err?.message || 'Supabase接続エラー'
   }
 
-  if (!locations || locations.length === 0) {
+  // エラー発生時の画面表示
+  if (fetchError) {
     return (
-      <div className="p-3 text-xs text-gray-400 text-center">
-        エリア情報が登録されていません
+      <div className="p-3 text-[11px] text-red-500 bg-red-50 text-center border-b">
+        エリアデータ取得エラー: {fetchError}
       </div>
     )
   }
 
-  // 2. area_slug ごとにまとめる処理
+  // データが0件の場合の画面表示
+  if (!locations || locations.length === 0) {
+    return (
+      <div className="p-3 text-[11px] text-gray-400 text-center border-b">
+        エリアデータが登録されていません (0件)
+      </div>
+    )
+  }
+
+  // area_slug ごとに集計
   const areaMap = new Map<string, { city: string; areaGroup: string; count: number }>()
 
   locations.forEach((loc) => {
     if (!loc.area_slug) return
 
-    // salons が配列でない場合も考慮して件数を計算
     const salonList = Array.isArray(loc.salons) ? loc.salons : []
     const salonCount = salonList.length
 
@@ -53,8 +68,6 @@ export default async function AreaMenu() {
     }
   })
 
-  const areaList = Array.from(areaMap.entries())
-
   return (
     <section className="w-full py-3 bg-gray-50 border-b border-gray-200">
       <div className="px-3 mb-2 flex justify-between items-center">
@@ -64,15 +77,15 @@ export default async function AreaMenu() {
 
       <div className="flex overflow-x-auto px-3 pb-2 gap-2 scrollbar-hide snap-x">
         <div className="grid grid-rows-2 grid-flow-col gap-2">
-          {areaList.map(([areaSlug, data]) => (
+          {Array.from(areaMap.entries()).map(([areaSlug, data]) => (
             <Link
               key={areaSlug}
               href={`/area/${areaSlug}`}
               className="w-20 h-20 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center p-1 text-center snap-start active:scale-95 transition-transform relative"
             >
-              {/* サロン掲載数バッジ */}
+              {/* 店舗数バッジ */}
               {data.count > 0 && (
-                <span className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full px-1.5">
+                <span className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">
                   {data.count}
                 </span>
               )}

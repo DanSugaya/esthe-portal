@@ -1,13 +1,18 @@
-// app/page.tsx
-import AreaMenu from '@/components/AreaMenu'
+import AreaMenu from '@/components/AreaMenu';
+import RotationBanner from '@/components/RotationBanner';
 
 export default function HomePage() {
   return (
-    <main className="py-2">
-      {/* トップページ専用エリアメニュー */}
-      <AreaMenu />
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      {/* エリアメニュー */}
+      <section>
+        <AreaMenu />
+      </section>
 
-      {/* 今後店舗一覧などを追加する場合はここに配置 */}
-    </main>
-  )
+      {/* バナースライダー */}
+      <section>
+        <RotationBanner />
+      </section>
+    </div>
+  );
 }
