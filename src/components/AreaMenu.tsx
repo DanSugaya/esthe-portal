@@ -9,12 +9,12 @@ export default async function AreaMenu() {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
-      .from('use_locations')
+      .from('areas')
       .select(`
         id,
         city,
         area_group,
-        area_slug,
+        parent_area,
         slug,
         salons ( id )
       `)
@@ -48,7 +48,6 @@ export default async function AreaMenu() {
     <section className="w-full py-3 bg-gray-50 border-b border-gray-200">
       <div className="px-3 mb-2 flex justify-between items-center">
         <h2 className="text-xs font-bold text-gray-700">エリアから探す</h2>
-        <span className="text-[10px] text-gray-400">横にスワイプ ➔</span>
       </div>
 
       <div className="flex overflow-x-auto px-3 pb-2 gap-2 scrollbar-hide snap-x">
@@ -60,18 +59,15 @@ export default async function AreaMenu() {
             return (
               <Link
                 key={loc.id}
-                /* 2階層のURLパス (/area/saitama/omiya) に変更 */
-                href={`/area/${loc.area_slug}/${loc.slug}`}
+                href={`/area/${loc.parent_area}/${loc.slug}`}
                 className="w-20 h-20 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center p-1 text-center snap-start active:scale-95 transition-transform relative"
               >
-                {/* 店舗数バッジ */}
                 {count > 0 && (
                   <span className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">
                     {count}
                   </span>
                 )}
 
-                {/* アイコン */}
                 <div className="w-6 h-6 rounded-full bg-amber-50 flex items-center justify-center mb-1 text-amber-500">
                   <MapPin className="w-3.5 h-3.5" />
                 </div>
