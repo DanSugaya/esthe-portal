@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination } from 'swiper/modules';
+import { FreeMode } from 'swiper/modules';
 
 import 'swiper/css';
-import 'swiper/css/pagination';
+import 'swiper/css/free-mode';
 
 type Banner = {
   id: string;
@@ -15,21 +15,23 @@ type Banner = {
   link_url: string;
 };
 
-export default function RotationBanner() {
+export default function SubBannerSlider() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
     const fetchBanners = async () => {
+      // type が 'sub' かつ有効なバナーを取得
       const { data, error } = await supabase
         .from('banners')
         .select('*')
         .eq('is_active', true)
+        .eq('type', 'sub')
         .order('sort_order', { ascending: true });
 
       if (error) {
-        console.error('バナーの取得に失敗しました:', error);
+        console.error('サブバナーの取得に失敗しました:', error);
       } else if (data) {
         setBanners(data);
       }
@@ -42,15 +44,13 @@ export default function RotationBanner() {
   if (loading || banners.length === 0) return null;
 
   return (
-    // my-4 や py などの上下余白を排除し、w-full で横幅いっぱいに指定
-    <div className="w-full relative">
+    <div className="w-full pt-1 pb-2">
       <Swiper
-        modules={[Autoplay, Pagination]}
-        loop={banners.length > 1}
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
-        pagination={{ clickable: true }}
-        slidesPerView={1}
-        className="w-full compact-swiper"
+        modules={[FreeMode]}
+        slidesPerView={4.2} // 4枚＋次の画像をちらっと見せてスライドを促す
+        spaceBetween={4}   // バナー同士の隙間を狭く設定
+        freeMode={true}    // 滑らかな手動スクロールを有効化
+        className="w-full"
       >
         {banners.map((banner) => (
           <SwiperSlide key={banner.id}>
@@ -58,12 +58,12 @@ export default function RotationBanner() {
               href={banner.link_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full"
+              className="block w-full aspect-square overflow-hidden"
             >
               <img
                 src={banner.image_url}
                 alt={banner.title}
-                className="w-full h-auto block object-cover rounded-none"
+                className="w-full h-full object-cover block"
                 loading="lazy"
               />
             </a>
