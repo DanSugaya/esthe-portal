@@ -1,23 +1,29 @@
 import AreaMenu from '@/components/AreaMenu';
 import RotationBanner from '@/components/RotationBanner';
 import SubBannerSlider from '@/components/SubBannerSlider';
+import TherapistSlider from '@/components/TherapistSlider';
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="space-y-2">
       {/* エリアメニュー */}
       <section>
         <AreaMenu />
       </section>
 
-      {/* メインバナー（自動ローテーション） */}
-      <section className="mt-0 pt-0">
+      {/* メインローテーションバナー */}
+      <section>
         <RotationBanner />
       </section>
 
-      {/* サブバナー（スクエア横スクロール） */}
-      <section className="mt-0 pt-0">
+      {/* サブスクエアバナー */}
+      <section>
         <SubBannerSlider />
+      </section>
+
+      {/* 今すぐご案内できるセラピスト */}
+      <section>
+        <TherapistSlider />
       </section>
     </div>
   );
