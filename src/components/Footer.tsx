@@ -51,7 +51,7 @@ export default function Footer() {
 
         {/* コピーライト */}
         <div className="pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Esthe Portal. All rights reserved.
+          © {new Date().getFullYear()} 埼玉メンズエステ情報館. All rights reserved.
         </div>
       </div>
     </footer>
