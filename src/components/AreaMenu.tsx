@@ -1,11 +1,12 @@
 // src/components/AreaMenu.tsx
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { MapPin } from 'lucide-react'
 
 export default async function AreaMenu() {
   const supabase = await createClient()
 
-  // 1. use_locations テーブルからエリア情報を取得
+  // 1. use_locations テーブルからデータ取得
   const { data: locations, error } = await supabase
     .from('use_locations')
     .select(`
@@ -17,28 +18,42 @@ export default async function AreaMenu() {
       salons ( id )
     `)
 
-  if (error || !locations) {
-    return null
+  // エラー時やデータが空のときのデバッグログ
+  if (error) {
+    console.error('Supabase Fetch Error:', error)
   }
 
-  // 重複する area_slug をまとめて、配下のサロン件数を集計する処理
+  if (!locations || locations.length === 0) {
+    return (
+      <div className="p-3 text-xs text-gray-400 text-center">
+        エリア情報が登録されていません
+      </div>
+    )
+  }
+
+  // 2. area_slug ごとにまとめる処理
   const areaMap = new Map<string, { city: string; areaGroup: string; count: number }>()
 
   locations.forEach((loc) => {
-    // リレーションで取得した salons の件数
-    const salonCount = Array.isArray(loc.salons) ? loc.salons.length : 0
+    if (!loc.area_slug) return
+
+    // salons が配列でない場合も考慮して件数を計算
+    const salonList = Array.isArray(loc.salons) ? loc.salons : []
+    const salonCount = salonList.length
 
     if (areaMap.has(loc.area_slug)) {
       const current = areaMap.get(loc.area_slug)!
       current.count += salonCount
     } else {
       areaMap.set(loc.area_slug, {
-        city: loc.city,
-        areaGroup: loc.area_group,
+        city: loc.city || 'エリア',
+        areaGroup: loc.area_group || '',
         count: salonCount,
       })
     }
   })
+
+  const areaList = Array.from(areaMap.entries())
 
   return (
     <section className="w-full py-3 bg-gray-50 border-b border-gray-200">
@@ -49,7 +64,7 @@ export default async function AreaMenu() {
 
       <div className="flex overflow-x-auto px-3 pb-2 gap-2 scrollbar-hide snap-x">
         <div className="grid grid-rows-2 grid-flow-col gap-2">
-          {Array.from(areaMap.entries()).map(([areaSlug, data]) => (
+          {areaList.map(([areaSlug, data]) => (
             <Link
               key={areaSlug}
               href={`/area/${areaSlug}`}
@@ -57,10 +72,15 @@ export default async function AreaMenu() {
             >
               {/* サロン掲載数バッジ */}
               {data.count > 0 && (
-                <span className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">
+                <span className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full px-1.5">
                   {data.count}
                 </span>
               )}
+
+              {/* アイコン */}
+              <div className="w-6 h-6 rounded-full bg-amber-50 flex items-center justify-center mb-1 text-amber-500">
+                <MapPin className="w-3.5 h-3.5" />
+              </div>
 
               <span className="text-[11px] font-bold text-gray-800 leading-tight line-clamp-1">
                 {data.city}
