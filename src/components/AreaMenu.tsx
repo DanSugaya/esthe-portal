@@ -59,7 +59,7 @@ export default async function AreaMenu() {
             return (
               <Link
                 key={loc.id}
-                href={`/area/${loc.parent_area}/${loc.slug}`}
+                href={`/area/${loc.slug}`}
                 className="w-20 h-20 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center p-1 text-center snap-start active:scale-95 transition-transform relative"
               >
                 {count > 0 && (

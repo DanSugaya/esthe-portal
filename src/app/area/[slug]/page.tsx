@@ -4,20 +4,18 @@ import Link from 'next/link'
 
 interface PageProps {
   params: Promise<{
-    area_slug: string
     slug: string
   }>
 }
 
 export default async function AreaPage({ params }: PageProps) {
-  const { area_slug, slug } = await params
+  const { slug } = await params
   const supabase = await createClient()
 
-  // 1. スラグから対象のエリア情報を取得（例: area_slug='saitama', slug='omiya' → city='大宮'）
+  // 1. スラグから対象のエリア情報を取得（例: slug='omiya' → id=9）
   const { data: location, error: locationError } = await supabase
-    .from('use_locations')
+    .from('areas')
     .select('*')
-    .eq('area_slug', area_slug)
     .eq('slug', slug)
     .maybeSingle()
 
@@ -25,11 +23,11 @@ export default async function AreaPage({ params }: PageProps) {
     notFound()
   }
 
-  // 2. salons テーブルの area カラム（'大宮'）または location_id と一致するサロンを取得
+  // 2. salons テーブルの area_id がエリアの id (9など) と一致するサロンを取得
   const { data: salons, error: salonsError } = await supabase
     .from('salons')
     .select('*')
-    .or(`area.eq.${location.city},location_id.eq.${location.id}`)
+    .eq('area_id', location.id) // ← ここをエリアのidによる一致に変更
 
   if (salonsError) {
     console.error('サロン取得エラー:', salonsError)
