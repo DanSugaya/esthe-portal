@@ -59,7 +59,7 @@ export default function CategoryMenu() {
         {categories.map((cat) => (
           <Link
             key={cat.id}
-            href={`/salons?category=${cat.slug}`}
+            href={`/category/${cat.slug}`}
             className="flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-100 rounded-lg hover:bg-amber-50/50 hover:border-amber-200 transition-colors group"
           >
             <div className="p-2.5 rounded-full bg-white shadow-sm mb-1.5 group-hover:scale-110 transition-transform">
