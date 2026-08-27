@@ -1,9 +1,11 @@
 import AreaMenu from '@/components/AreaMenu';
-import CategoryMenu from '@/components/CategoryMenu'; // 追加
+import CategoryMenu from '@/components/CategoryMenu';
 import RotationBanner from '@/components/RotationBanner';
 import SubBannerSlider from '@/components/SubBannerSlider';
 import TherapistSlider from '@/components/TherapistSlider';
+import DiarySection from '@/components/DiarySection'; // 追加
 import NewSalons from '@/components/NewSalons';
+import NewsSection from '@/components/NewsSection';
 
 export default function HomePage() {
   return (
@@ -12,11 +14,15 @@ export default function HomePage() {
       <section>
         <AreaMenu />
       </section>
+
+      
+
       {/* メインローテーションバナー */}
       <section>
         <RotationBanner />
       </section>
-       {/* サブスクエアバナー */}
+
+      {/* サブスクエアバナー */}
       <section>
         <SubBannerSlider />
       </section>
@@ -31,9 +37,19 @@ export default function HomePage() {
         <TherapistSlider />
       </section>
 
+      {/* 写メ日記 */}
+      <section>
+        <DiarySection />
+      </section>
+
       {/* 新規掲載店 */}
       <section>
         <NewSalons />
+      </section>
+
+      {/* お知らせ */}
+      <section>
+        <NewsSection />
       </section>
     </div>
   );
