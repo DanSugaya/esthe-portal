@@ -50,7 +50,7 @@ export default async function AreaMenu() {
         <h2 className="text-xs font-bold text-gray-700">エリアから探す</h2>
       </div>
 
-      <div className="flex overflow-x-auto px-3 pb-2 gap-2 scrollbar-hide snap-x">
+      <div className="flex overflow-x-auto px-3 pb-2 gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x">
         <div className="grid grid-rows-2 grid-flow-col gap-2">
           {locations.map((loc) => {
             const salonList = Array.isArray(loc.salons) ? loc.salons : []

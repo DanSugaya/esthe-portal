@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import Image from 'next/image'
+import Breadcrumbs from '@/components/Breadcrumbs'
 
 interface PageProps {
   params: Promise<{
@@ -11,32 +13,78 @@ export default async function SalonDetailPage({ params }: PageProps) {
   const { id } = await params
   const supabase = await createClient()
 
-  // 1. まずサロン本体のデータだけを単純に取得してみる
+  // salons テーブルから name と image_url、およびパンくず用のエリア情報を取得
   const { data: salon, error } = await supabase
     .from('salons')
-    .select('*')
+    .select(`
+      id,
+      name,
+      image_url,
+      areas!area_id (
+        id,
+        area_group,
+        city,
+        slug
+      )
+    `)
     .eq('id', id)
     .single()
 
-  // エラーやデータがない場合は詳細を画面に出す
   if (error || !salon) {
-    return (
-      <div className="p-8 text-red-500">
-        <h1 className="text-xl font-bold">サロンデータ取得エラー</h1>
-        <p>指定されたID: {id}</p>
-        <p>エラーメッセージ: {error?.message || '該当サロンがありません'}</p>
-      </div>
-    )
+    console.error('サロン取得エラー:', error)
+    notFound()
   }
 
-  return (
-    <main className="max-w-4xl mx-auto p-6 space-y-8">
-      <Link href="/" className="text-sm text-gray-500 hover:underline">
-        &larr; サロン一覧に戻る
-      </Link>
+  // エリアデータの抽出
+  const areaData = Array.isArray(salon.areas) ? salon.areas[0] : salon.areas
 
-      <h1 className="text-3xl font-bold text-gray-800">{salon.name}</h1>
-      <p className="text-gray-600">{salon.description}</p>
-    </main>
+  // パンくずリスト用のデータ
+  const breadcrumbItems = [
+    {
+      label: areaData?.area_group || 'エリア一覧',
+      href: '/'
+    },
+    {
+      label: areaData?.city || 'エリア',
+      href: areaData?.slug ? `/area/${areaData.slug}` : undefined
+    },
+    {
+      label: salon.name
+    }
+  ]
+
+  return (
+    <div className="bg-slate-50 min-h-screen pb-12">
+      {/* 1. パンくずリスト */}
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+        <article className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          {/* 2. 画像 (salons.image_url) */}
+          {salon.image_url ? (
+            <div className="relative h-72 md:h-96 w-full bg-gray-100">
+              <Image
+                src={salon.image_url}
+                alt={salon.name}
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="h-60 w-full bg-gray-100 flex items-center justify-center text-gray-400">
+              No Image
+            </div>
+          )}
+
+          {/* 3. 店舗名 (salons.name) */}
+          <div className="p-6 md:p-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              {salon.name}
+            </h1>
+          </div>
+        </article>
+      </main>
+    </div>
   )
 }
