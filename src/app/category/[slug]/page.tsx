@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
+import ShopCard from '@/components/ShopCard'
 
 interface PageProps {
   params: Promise<{
@@ -23,10 +23,17 @@ export default async function CategoryPage({ params }: PageProps) {
     notFound()
   }
 
-  // 2. salons テーブルの category_id がカテゴリーの id と一致するサロンを取得
+  // 2. salons テーブルから対象カテゴリーのサロンおよび所属セラピストを取得
   const { data: salons, error: salonsError } = await supabase
     .from('salons')
-    .select('*')
+    .select(`
+      *,
+      therapists (
+        id,
+        name,
+        image_url
+      )
+    `)
     .eq('category_id', category.id)
 
   if (salonsError) {
@@ -42,16 +49,7 @@ export default async function CategoryPage({ params }: PageProps) {
       {salons && salons.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {salons.map((salon) => (
-            <Link
-              key={salon.id}
-              href={`/salons/${salon.id}`}
-              className="border rounded-lg p-4 hover:shadow-lg transition bg-white block"
-            >
-              <h2 className="text-lg font-bold mb-2">{salon.name}</h2>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {salon.description || '説明はありません'}
-              </p>
-            </Link>
+            <ShopCard key={salon.id} salon={salon} />
           ))}
         </div>
       ) : (
