@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import Breadcrumbs from '@/components/Breadcrumbs'
+import ShopCard from '@/components/ShopCard'
 
 interface PageProps {
   params: Promise<{
@@ -24,10 +24,17 @@ export default async function AreaPage({ params }: PageProps) {
     notFound()
   }
 
-  // 2. salons テーブルから対象エリアのサロンを取得
+  // 2. salons テーブルから対象エリアのサロンおよび所属セラピストを取得
   const { data: salons, error: salonsError } = await supabase
     .from('salons')
-    .select('*')
+    .select(`
+      *,
+      therapists (
+        id,
+        name,
+        image_url
+      )
+    `)
     .eq('area_id', location.id)
 
   if (salonsError) {
@@ -47,7 +54,6 @@ export default async function AreaPage({ params }: PageProps) {
 
   return (
     <div className="bg-slate-50 min-h-screen pb-12">
-      {/* 1. パンくずリスト */}
       <Breadcrumbs items={breadcrumbItems} />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -58,16 +64,7 @@ export default async function AreaPage({ params }: PageProps) {
         {salons && salons.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {salons.map((salon) => (
-              <Link
-                key={salon.id}
-                href={`/salons/${salon.id}`}
-                className="border rounded-lg p-4 hover:shadow-lg transition bg-white block"
-              >
-                <h2 className="text-lg font-bold mb-2">{salon.name}</h2>
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {salon.description || '説明はありません'}
-                </p>
-              </Link>
+              <ShopCard key={salon.id} salon={salon} />
             ))}
           </div>
         ) : (
