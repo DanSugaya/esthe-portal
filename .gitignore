@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# VS CodeのCLIツール関連を除外
+code
+vscode_cli.tar.gz
