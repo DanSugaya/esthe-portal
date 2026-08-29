@@ -21,7 +21,6 @@ export default function OwnerAuthPage() {
     setLoading(true)
 
     try {
-      // 1. ログイン処理
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -29,14 +28,12 @@ export default function OwnerAuthPage() {
 
       if (authError) throw new Error(authError.message)
 
-      // ロールの確認（owner 以外を弾く）
       const userRole = authData.user?.user_metadata?.role
       if (userRole !== 'owner') {
         await supabase.auth.signOut()
         throw new Error('店舗オーナー用のアカウントではありません。')
       }
 
-      // 2. 店舗のステータスを取得して振り分け
       const { data: salon, error: salonError } = await supabase
         .from('salons')
         .select('status')
@@ -58,152 +55,140 @@ export default function OwnerAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
-      {/* ヒーローセクション */}
-      <section className="relative overflow-hidden pt-12 pb-16 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-slate-900 to-pink-900/20 pointer-events-none" />
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <span className="inline-block px-3 py-1 text-xs font-semibold bg-indigo-500/10 text-indigo-400 rounded-full border border-indigo-500/20 mb-4">
-            店舗オーナー様向けポータル
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
-            集客からマーケティング分析まで。<br className="hidden sm:block" />
-            次世代の店舗管理プラットフォーム。
-          </h1>
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto mb-8">
-            アクセス解析、顧客動向把握、売上最大化の施策立案までをワンストップでサポート。
-          </p>
+    <div className="min-h-screen bg-[#b29146] text-slate-800 font-sans pb-16">
+      
+      {/* 1. アナウンスバー（最上部バナー） */}
+      <div className="bg-[#4a3910] text-[#f2e6c9] text-[11px] py-2 px-4 text-center font-bold">
+        【特別企画】現在、新規掲載店舗様を無料募集・全有料プラン解放中！
+      </div>
 
-          {/* キャンペーンバナー */}
-          <div className="max-w-2xl mx-auto bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-indigo-500/20 border border-amber-500/30 rounded-2xl p-4 text-left sm:flex items-center justify-between gap-4">
-            <div>
-              <span className="inline-block bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider mb-1">
-                現在オープン記念
-              </span>
-              <h3 className="text-sm font-bold text-amber-200">プレミアムプラン（有料機能）全開放中！</h3>
-              <p className="text-xs text-slate-300 mt-0.5">初期費用・月額利用料ともに完全無料で掲載いただけます。</p>
-            </div>
-            <a
-              href="#login-form"
-              className="mt-3 sm:mt-0 inline-block text-center whitespace-nowrap bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-lg transition"
-            >
-              無料掲載に申し込む
-            </a>
+      {/* 2. メインヒーローセクション */}
+      <section className="px-4 pt-8 pb-6 text-center text-[#fffde8]">
+        <h1 className="text-2xl font-extrabold tracking-tight mb-2 text-white drop-shadow">
+          埼玉メンズエステ情報館<br />
+          店舗パートナー募集プログラム
+        </h1>
+        <p className="text-xs leading-relaxed max-w-xs mx-auto opacity-90">
+          データ駆動型の集客（OODA分析）で、<br />
+          あなたのお店の予約数を最大化します。
+        </p>
+
+        {/* 中央のグラフィックアイコン風カード */}
+        <div className="my-6 mx-auto w-48 h-48 bg-[#fffde8] rounded-full flex flex-col items-center justify-center p-4 shadow-inner border-4 border-[#8c7031] text-[#735920]">
+          <div className="text-3xl mb-1">🏪</div>
+          <span className="text-xs font-extrabold tracking-wider">掲載手数料</span>
+          <span className="text-xl font-black text-[#c0392b]">初期・月額 0円</span>
+          <span className="text-[10px] bg-[#735920] text-white px-2 py-0.5 rounded-full mt-1">先行受付中</span>
+        </div>
+
+        <p className="text-xs font-bold text-[#fffde8]">
+          掲載開始までのステップ＆ログイン方法
+        </p>
+      </section>
+
+      {/* 3. ナビゲーションアイコン（紹介する方 / 登録する方） */}
+      <section className="max-w-sm mx-auto px-4 mb-6 flex justify-center gap-6">
+        <a href="#register-step" className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-[#fffde8] flex items-center justify-center text-xl shadow border-2 border-[#8c7031] text-[#8c7031]">
+            📝
           </div>
+          <span className="text-xs font-bold text-white mt-1">新規掲載</span>
+        </a>
+        <a href="#login-form" className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-[#fffde8] flex items-center justify-center text-xl shadow border-2 border-[#8c7031] text-[#8c7031]">
+            🔑
+          </div>
+          <span className="text-xs font-bold text-white mt-1">ログイン</span>
+        </a>
+      </section>
+
+      {/* 4. メインコンテンツカード（新規登録・掲載の流れ） */}
+      <section id="register-step" className="max-w-sm mx-auto px-4 mb-8">
+        <div className="bg-[#fffde8] rounded-2xl p-5 shadow-lg border border-[#d9c593]">
+          
+          {/* カードヘッダー */}
+          <div className="bg-[#2c80a4] text-white text-center py-2 rounded-xl mb-4 shadow-sm">
+            <h2 className="font-bold text-sm">新規掲載申請の流れ</h2>
+            <p className="text-[10px] opacity-90">埼玉エリアの店舗様限定特典</p>
+          </div>
+
+          <div className="bg-[#e6f4f8] p-3 rounded-lg text-center text-[#1f5a73] font-bold text-xs mb-6">
+            今なら全有料プラン機能<br />
+            （アクセス解析・OODAループ機能）を無料提供！
+          </div>
+
+          {/* ステップ 01 */}
+          <div className="mb-6 relative pl-10 border-l-2 border-dashed border-[#2c80a4]">
+            <span className="absolute -left-3 top-0 text-[#2c80a4] font-black text-xl bg-[#fffde8] px-1">
+              01
+            </span>
+            <h3 className="font-bold text-xs text-[#2c80a4] mb-1">無料アカウント登録</h3>
+            <p className="text-[11px] text-slate-600 leading-snug mb-3">
+              以下のフォームより、メールアドレスとパスワードを入力して掲載申請を行います。
+            </p>
+            <Link
+              href="/owner/register"
+              className="block w-full text-center py-2.5 bg-[#c0392b] text-white rounded-full font-bold text-xs shadow-md hover:opacity-90 transition"
+            >
+              新規掲載申請はこちら ›
+            </Link>
+          </div>
+
+          {/* ステップ 02 */}
+          <div className="mb-6 relative pl-10 border-l-2 border-dashed border-[#2c80a4]">
+            <span className="absolute -left-3 top-0 text-[#2c80a4] font-black text-xl bg-[#fffde8] px-1">
+              02
+            </span>
+            <h3 className="font-bold text-xs text-[#2c80a4] mb-1">店舗情報の登録・審査</h3>
+            <p className="text-[11px] text-slate-600 leading-snug">
+              管理画面より店舗名、写真、コース情報を登録。運営側で迅速に確認・承認処理を行います。
+            </p>
+          </div>
+
+          {/* ステップ 03 */}
+          <div className="relative pl-10">
+            <span className="absolute -left-3 top-0 text-[#2c80a4] font-black text-xl bg-[#fffde8] px-1">
+              03
+            </span>
+            <h3 className="font-bold text-xs text-[#2c80a4] mb-1">掲載開始＆アクセス分析</h3>
+            <p className="text-[11px] text-slate-600 leading-snug">
+              ポータルサイトに即時反映。ダッシュボードでPV数やユーザーの行動（OODA）をリアルタイムで追跡可能です。
+            </p>
+          </div>
+
         </div>
       </section>
 
-      {/* メインコンテンツ（LP説明 + ログイン/登録フォーム） */}
-      <section id="login-form" className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        
-        {/* 左側：機能・魅力のビジュアル紹介（グラフィカルなLP要素） */}
-        <div className="lg:col-span-7 space-y-8">
-          <div>
-            <h2 className="text-xl font-bold text-white mb-2">なぜ今、掲載すべきなのか？</h2>
-            <p className="text-xs text-slate-400">データに基づいた店舗運営（OODAループ）を実現する高度な機能を順次提供。</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* 機能カード 1 */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-              <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 mb-3 text-sm font-bold">
-                01
-              </div>
-              <h3 className="text-sm font-bold text-white mb-1">グラフィカルなアクセス解析</h3>
-              <p className="text-xs text-slate-400">
-                PV数やクリック率、時間帯別のPV推移をダッシュボードで一目で把握。
-              </p>
-            </div>
-
-            {/* 機能カード 2 */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-              <div className="w-8 h-8 bg-rose-500/20 rounded-lg flex items-center justify-center text-rose-400 mb-3 text-sm font-bold">
-                02
-              </div>
-              <h3 className="text-sm font-bold text-white mb-1">OODAに基づく改善アクション</h3>
-              <p className="text-xs text-slate-400">
-                観察・状況判断から迅速に次の一手（クーポン発刊や写真変更）を実行。
-              </p>
-            </div>
-
-            {/* 機能カード 3 */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-              <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center text-emerald-400 mb-3 text-sm font-bold">
-                03
-              </div>
-              <h3 className="text-sm font-bold text-white mb-1">全有料プラン機能を無料提供</h3>
-              <p className="text-xs text-slate-400">
-                掲載初期の認知拡大をサポートするため、限定枠でプレミアム機能を初期完全解放。
-              </p>
-            </div>
-
-            {/* 機能カード 4 */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-              <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center text-amber-400 mb-3 text-sm font-bold">
-                04
-              </div>
-              <h3 className="text-sm font-bold text-white mb-1">簡単操作の管理画面</h3>
-              <p className="text-xs text-slate-400">
-                スマホからでも簡単に店舗情報の更新や写真の差し替えが可能。
-              </p>
-            </div>
-          </div>
-
-          {/* 今後実装予定のダッシュボードプレビュー領域 */}
-          <div className="bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-slate-300">ダッシュボード機能プレビュー</span>
-              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded">
-                開発予定・順次公開
-              </span>
-            </div>
-            
-            {/* プレビューイメージ（CSSによるダミーグラフ表示） */}
-            <div className="space-y-3 opacity-80">
-              <div className="h-16 bg-slate-900/80 rounded border border-slate-700/50 p-2 flex items-end justify-between gap-1">
-                <div className="w-full bg-indigo-500/40 rounded-t h-4 animate-pulse" />
-                <div className="w-full bg-indigo-500/60 rounded-t h-8 animate-pulse" />
-                <div className="w-full bg-indigo-500/80 rounded-t h-12 animate-pulse" />
-                <div className="w-full bg-indigo-500 rounded-t h-10 animate-pulse" />
-                <div className="w-full bg-indigo-500/50 rounded-t h-6 animate-pulse" />
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1 h-8 bg-slate-900/80 rounded border border-slate-700/50" />
-                <div className="flex-1 h-8 bg-slate-900/80 rounded border border-slate-700/50" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 右側：ログイン & 申請フォーム */}
-        <div className="lg:col-span-5 w-full bg-white text-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-200">
+      {/* 5. オーナーログインフォーム */}
+      <section id="login-form" className="max-w-sm mx-auto px-4 mb-8">
+        <div className="bg-[#fffde8] rounded-2xl p-5 shadow-lg border border-[#d9c593]">
           
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-slate-900">オーナーログイン</h2>
-            <p className="text-xs text-slate-500 mt-1">掲載中の店舗オーナー様はこちら</p>
+          <div className="bg-[#2d7350] text-white text-center py-2 rounded-xl mb-4 shadow-sm">
+            <h2 className="font-bold text-sm">店舗オーナー ログイン</h2>
+            <p className="text-[10px] opacity-90">登録がお済みの方はこちら</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">メールアドレス</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">メールアドレス</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 p-2.5 text-xs outline-none focus:ring-2 focus:ring-slate-900 transition"
+                className="w-full rounded-lg border border-slate-300 p-2 text-xs bg-white outline-none focus:ring-2 focus:ring-[#2d7350]"
                 placeholder="owner@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">パスワード</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">パスワード</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 p-2.5 text-xs outline-none focus:ring-2 focus:ring-slate-900 transition"
+                className="w-full rounded-lg border border-slate-300 p-2 text-xs bg-white outline-none focus:ring-2 focus:ring-[#2d7350]"
                 placeholder="••••••••"
               />
             </div>
@@ -211,34 +196,37 @@ export default function OwnerAuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer shadow-md"
+              className="w-full py-3 bg-[#2d7350] text-white rounded-full text-xs font-bold shadow-md hover:opacity-90 transition cursor-pointer"
             >
-              {loading ? '認証中...' : '管理画面にログイン'}
+              {loading ? 'ログイン中...' : '管理画面にログインする'}
             </button>
           </form>
 
-          {/* 新規掲載申請への誘導 */}
-          <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
-            <div className="bg-slate-50 p-3 rounded-lg text-center border border-slate-200">
-              <p className="text-xs text-slate-600 mb-2 font-medium">まだアカウントをお持ちでない方</p>
-              <Link
-                href="/owner/register"
-                className="block w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold transition shadow-sm"
-              >
-                無料掲載申請（新規登録）を行う
-              </Link>
-            </div>
-
-            <div className="text-center">
-              <Link href="/" className="text-xs text-slate-400 hover:text-slate-600 hover:underline transition">
-                ← トップページに戻る
-              </Link>
-            </div>
-          </div>
-
         </div>
-
       </section>
+
+      {/* 6. 注意事項・特記事項（アコーディオン風デザイン） */}
+      <section className="max-w-sm mx-auto px-4 mb-8 text-[#fffde8]">
+        <div className="border-t border-[#d9c593]/40 pt-4">
+          <h3 className="font-bold text-xs text-center mb-3 text-[#fffde8]">掲載に関する注意事項</h3>
+          <ul className="text-[10px] space-y-1.5 opacity-90 list-disc list-inside leading-relaxed">
+            <li>埼玉エリア内のメンズエステ店舗様のみご登録いただけます。</li>
+            <li>風営法および関係法令を遵守している店舗に限ります。</li>
+            <li>無料枠の適用期間・特典内容は予告なく変更となる場合があります。</li>
+            <li>申請内容に不備がある場合、審査にお時間をいただくことがございます。</li>
+          </ul>
+        </div>
+      </section>
+
+      {/* 7. フッターナビゲーション */}
+      <footer className="max-w-sm mx-auto px-4 pt-6 border-t border-[#4a3910] text-[#f2e6c9] text-center text-[10px]">
+        <div className="space-y-2 mb-4">
+          <div><Link href="/" className="hover:underline">トップページに戻る</Link></div>
+          <div><Link href="/terms" className="hover:underline">利用規約</Link> | <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link></div>
+        </div>
+        <p className="opacity-60">© 2026 埼玉メンズエステ情報館.</p>
+      </footer>
+
     </div>
   )
 }
