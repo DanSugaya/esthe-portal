@@ -69,7 +69,7 @@ export default function OwnerAuthPage() {
           店舗パートナー募集プログラム
         </h1>
         <p className="text-xs leading-relaxed max-w-xs mx-auto opacity-90">
-          データ駆動型の集客（OODA分析）で、<br />
+          データ駆動型の集客で、<br />
           あなたのお店の予約数を最大化します。
         </p>
 
@@ -114,7 +114,7 @@ export default function OwnerAuthPage() {
 
           <div className="bg-[#e6f4f8] p-3 rounded-lg text-center text-[#1f5a73] font-bold text-xs mb-6">
             今なら全有料プラン機能<br />
-            （アクセス解析・OODAループ機能）を無料提供！
+            アクセス解析を無料提供！
           </div>
 
           {/* ステップ 01 */}
@@ -152,7 +152,7 @@ export default function OwnerAuthPage() {
             </span>
             <h3 className="font-bold text-xs text-[#2c80a4] mb-1">掲載開始＆アクセス分析</h3>
             <p className="text-[11px] text-slate-600 leading-snug">
-              ポータルサイトに即時反映。ダッシュボードでPV数やユーザーの行動（OODA）をリアルタイムで追跡可能です。
+              ポータルサイトに即時反映。ダッシュボードでPV数やユーザーの行動をリアルタイムで追跡可能です。
             </p>
           </div>
 
