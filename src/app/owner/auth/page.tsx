@@ -224,7 +224,6 @@ export default function OwnerAuthPage() {
           <div><Link href="/" className="hover:underline">トップページに戻る</Link></div>
           <div><Link href="/terms" className="hover:underline">利用規約</Link> | <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link></div>
         </div>
-        <p className="opacity-60">© 2026 埼玉メンズエステ情報館.</p>
       </footer>
 
     </div>
