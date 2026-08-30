@@ -13,8 +13,8 @@ export default function Header() {
           </button>
           
           {/* サイトタイトル */}
-          <h1 className="m-0 text-lg font-bold text-gray-800 leading-none">
-            <Link href="/">埼玉メンズエステ情報館</Link>
+          <h1 className="m-0 text-2xl font-black italic tracking-wider leading-none select-none">
+            <Link href="/">埼玉メンエス情報館</Link>
           </h1>
         </div>
 

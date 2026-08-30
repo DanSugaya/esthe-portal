@@ -8,7 +8,7 @@ export default function Footer() {
           {/* ブランド情報 */}
           <div>
             <Link href="/" className="text-lg font-bold text-white hover:opacity-80 transition">
-              埼玉メンズエステ情報館
+              埼玉メンエス情報館
             </Link>
             <p className="text-xs text-slate-400 mt-2 leading-relaxed">
               自分にぴったりのエステサロンが見つかるポータルサイト
@@ -51,7 +51,7 @@ export default function Footer() {
 
         {/* コピーライト */}
         <div className="pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} 埼玉メンズエステ情報館. All rights reserved.
+          © {new Date().getFullYear()} 埼玉メンエス情報館. All rights reserved.
         </div>
       </div>
     </footer>
