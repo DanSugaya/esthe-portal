@@ -10,6 +10,7 @@ export interface Therapist {
 export interface Salon {
   id: string | number
   name: string
+  chechphrase?: string | null
   description?: string | null
   image_url?: string | null
   price_info?: string | null
@@ -41,7 +42,7 @@ export default function ShopCard({ salon, maxTherapists = 6 }: ShopCardProps) {
             {salon.name}
           </h2>
           <p className="text-sm text-neutral-400 line-clamp-2 mb-3">
-            {salon.catchphrase || '説明はありません'}
+            {salon.chechphrase || '説明はありません'}
           </p>
         </Link>
 
