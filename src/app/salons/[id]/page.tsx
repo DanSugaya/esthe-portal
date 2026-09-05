@@ -14,8 +14,8 @@ export default async function SalonDetailPage({ params }: PageProps) {
 
   const targetId = isNaN(Number(id)) ? id : Number(id)
 
-  // DBからのデータ取得（therapistsリレーションを追加）
-const { data: salon, error } = await supabase
+  // DBからのデータ取得（追加カラムをすべて含める）
+  const { data: salon, error } = await supabase
     .from('salons')
     .select(`
       id,
@@ -24,6 +24,12 @@ const { data: salon, error } = await supabase
       catchphrase,
       image_url,
       is_published,
+      price_info,
+      card_ok,
+      business_hours,
+      reception_hours,
+      phone,
+      access,
       areas (
         id,
         area_group,
@@ -69,7 +75,6 @@ const { data: salon, error } = await supabase
     }
   ]
 
-  // DBから取得したセラピスト一覧（非アクティブを除外する場合はfilterを適用）
   const therapists = salon.therapists || []
 
   return (
@@ -81,7 +86,7 @@ const { data: salon, error } = await supabase
 
         {/* 2. メインビジュアル & 店舗ヘッダー */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
-          {/* カバー画像 (salon.image_url を使用) */}
+          {/* カバー画像 */}
           <div className="relative h-48 md:h-64 w-full bg-zinc-800">
             <img
               src={salon.image_url || "/images/no-image.png"}
@@ -96,9 +101,15 @@ const { data: salon, error } = await supabase
               <span className="px-2.5 py-1 rounded-full bg-pink-950/80 border border-pink-500/30 text-pink-400 font-semibold">
                 {areaData?.city || 'エリア情報なし'}
               </span>
+
+              {/* category_id に応じた動的表示 */}
               <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
-                マンション(個室)
+                {salon?.category_id === 1 && '店舗型'}
+                {salon?.category_id === 2 && 'マンション型'}
+                {salon?.category_id === 3 && '派遣型'}
+                {!salon?.category_id && '形態未設定'}
               </span>
+
               <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
                 日本人
               </span>
@@ -108,7 +119,6 @@ const { data: salon, error } = await supabase
               <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
                 {salon.name}
               </h1>
-              {/* キャッチコピー (salon.catchphrase を使用) */}
               {salon.catchphrase && (
                 <p className="text-sm md:text-base text-pink-300/90 font-medium pt-1">
                   {salon.catchphrase}
@@ -116,27 +126,33 @@ const { data: salon, error } = await supabase
               )}
             </div>
 
-            {/* 基本スペック */}
+            {/* 基本スペック（DBの動的データに置き換え） */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-sm text-zinc-300 border-t border-zinc-800/80">
               <div className="flex items-center gap-2">
-                <span className="text-pink-400 font-bold">予算:</span> 75分 / 15,000円〜
+                <span className="text-pink-400 font-bold">料金目安:</span> {salon.price_info || '要問合せ'}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-pink-400 font-bold">時間:</span> 10:00～LAST
+                <span className="text-pink-400 font-bold">営業時間:</span> {salon.business_hours || '未設定'}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-pink-400 font-bold">最寄:</span> {areaData?.city || '最寄駅'}
+                <span className="text-pink-400 font-bold">アクセス:</span> {salon.access || areaData?.city || '未設定'}
               </div>
             </div>
 
             {/* 予約アクションボタン */}
             <div className="grid grid-cols-2 gap-3 pt-4">
-              <a
-                href="tel:090-3440-1196"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition border border-zinc-700"
-              >
-                <span>📞 電話で予約</span>
-              </a>
+              {salon.phone ? (
+                <a
+                  href={`tel:${salon.phone.replace(/-/g, '')}`}
+                  className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition border border-zinc-700"
+                >
+                  <span>📞 電話で予約</span>
+                </a>
+              ) : (
+                <div className="flex items-center justify-center py-3 px-4 rounded-xl bg-zinc-800/50 text-zinc-500 font-bold border border-zinc-800 cursor-not-allowed">
+                  電話番号未設定
+                </div>
+              )}
               <a
                 href="https://lin.ee/YoVvvTo"
                 target="_blank"
@@ -208,7 +224,7 @@ const { data: salon, error } = await supabase
           )}
         </section>
 
-        {/* 5. 在籍セラピスト (DBから動的取得) */}
+        {/* 5. 在籍セラピスト */}
         <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div className="flex items-center gap-3">
@@ -252,7 +268,7 @@ const { data: salon, error } = await supabase
           )}
         </section>
 
-        {/* 6. 店舗基本情報 */}
+        {/* 6. 店舗基本情報（DBの動的データに置き換え） */}
         <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
           <div className="flex items-center gap-3 border-b border-zinc-800 pb-4">
             <div className="w-1.5 h-6 bg-pink-500 rounded-full" />
@@ -261,20 +277,36 @@ const { data: salon, error } = await supabase
 
           <div className="space-y-4 text-sm divide-y divide-zinc-800/60">
             <div className="grid grid-cols-3 gap-2 pt-3">
-              <span className="text-zinc-400 font-semibold">住所</span>
-              <span className="col-span-2 text-zinc-200">〒330-0802 埼玉県さいたま市大宮区宮町1丁目34</span>
+              <span className="text-zinc-400 font-semibold">電話番号</span>
+              <span className="col-span-2 text-zinc-200 font-mono">
+                {salon.phone || '未設定'}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-3">
+              <span className="text-zinc-400 font-semibold">アクセス</span>
+              <span className="col-span-2 text-zinc-200">
+                {salon.access || '未設定'}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2 pt-3">
               <span className="text-zinc-400 font-semibold">営業時間</span>
-              <span className="col-span-2 text-zinc-200">10:00～LAST（定休日: 年中無休）</span>
+              <span className="col-span-2 text-zinc-200">
+                {salon.business_hours || '未設定'}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2 pt-3">
-              <span className="text-zinc-400 font-semibold">支払い方法</span>
-              <span className="col-span-2 text-zinc-200">クレジットカード（Visa, Mastercard, JCB他）、PayPay</span>
+              <span className="text-zinc-400 font-semibold">受付時間</span>
+              <span className="col-span-2 text-zinc-200">
+                {salon.reception_hours || '未設定'}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2 pt-3">
-              <span className="text-zinc-400 font-semibold">特徴</span>
-              <span className="col-span-2 text-zinc-200">日本人セラピストのみ、完全予約制、完全個室</span>
+              <span className="text-zinc-400 font-semibold">カード利用</span>
+              <span className="col-span-2 text-zinc-200">
+                {salon.card_ok === true && 'クレジットカード利用可'}
+                {salon.card_ok === false && '現金のみ（カード利用不可）'}
+                {salon.card_ok === null && '要問合せ'}
+              </span>
             </div>
           </div>
         </section>
@@ -283,12 +315,18 @@ const { data: salon, error } = await supabase
 
       {/* 7. モバイル固定ボトムバー */}
       <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-3 flex gap-2 z-50 sm:hidden">
-        <a
-          href="tel:090-3440-1196"
-          className="flex-1 py-2.5 bg-zinc-800 text-white rounded-lg text-center font-bold text-sm border border-zinc-700"
-        >
-          電話予約
-        </a>
+        {salon.phone ? (
+          <a
+            href={`tel:${salon.phone.replace(/-/g, '')}`}
+            className="flex-1 py-2.5 bg-zinc-800 text-white rounded-lg text-center font-bold text-sm border border-zinc-700"
+          >
+            電話予約
+          </a>
+        ) : (
+          <div className="flex-1 py-2.5 bg-zinc-800/50 text-zinc-500 rounded-lg text-center font-bold text-sm border border-zinc-800 cursor-not-allowed">
+            電話予約不可
+          </div>
+        )}
         <a
           href="https://lin.ee/YoVvvTo"
           target="_blank"
