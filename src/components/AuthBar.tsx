@@ -50,17 +50,19 @@ export default function AuthBar() {
   }
 
   return (
-    <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+    <div className="px-3 py-2 bg-black border-b border-zinc-800">
       <div className="flex w-full gap-2">
+        {/* ログイン：ブラック背景 ＋ ショッキングピンク枠線＆文字 */}
         <Link
           href="/login"
-          className="flex-1 py-1.5 text-xs font-bold text-center text-blue-600 bg-white border border-blue-600 rounded hover:bg-blue-50 transition"
+          className="flex-1 py-1.5 text-xs font-bold text-center text-pink-500 bg-black border border-pink-500 rounded hover:bg-pink-500/10 transition"
         >
           ログイン
         </Link>
+        {/* 新規会員登録：ショッキングピンク背景 ＋ ホワイト文字 */}
         <Link
           href="/register"
-          className="flex-1 py-1.5 text-xs font-bold text-center text-white bg-blue-600 border border-blue-600 rounded hover:bg-blue-700 transition"
+          className="flex-1 py-1.5 text-xs font-bold text-center text-white bg-pink-500 border border-pink-500 rounded hover:bg-pink-600 transition"
         >
           新規会員登録
         </Link>
