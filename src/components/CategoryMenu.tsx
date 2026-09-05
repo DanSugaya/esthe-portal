@@ -12,11 +12,11 @@ type Category = {
   icon_name: string;
 };
 
-// 新しいカテゴリに対応する Lucide アイコンのマッピング
+// ショッキングピンク統一のアイコンマッピング
 const ICON_MAP: Record<string, React.ReactNode> = {
-  Store: <Store className="w-5 h-5 text-amber-500" />,
-  Building: <Building className="w-5 h-5 text-blue-500" />,
-  Car: <Car className="w-5 h-5 text-emerald-500" />,
+  Store: <Store className="w-5 h-5 text-[#ff2a9d]" />,
+  Building: <Building className="w-5 h-5 text-[#ff2a9d]" />,
+  Car: <Car className="w-5 h-5 text-[#ff2a9d]" />,
 };
 
 export default function CategoryMenu() {
@@ -45,11 +45,11 @@ export default function CategoryMenu() {
   if (loading) return null;
 
   return (
-    <section className="w-full py-3 bg-white border-b border-gray-100">
+    <section className="w-full py-3 bg-neutral-950 border-b border-neutral-800">
       {/* 見出しエリア */}
       <div className="flex items-center justify-between px-3 mb-2.5">
-        <h2 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-          <span className="w-2 h-4 bg-amber-500 rounded-full inline-block" />
+        <h2 className="text-xs font-black text-white flex items-center gap-1.5">
+          <span className="w-1 h-3.5 bg-[#e6007e] rounded-full shadow-[0_0_6px_rgba(230,0,126,0.8)]" />
           営業形態から探す
         </h2>
       </div>
@@ -60,12 +60,19 @@ export default function CategoryMenu() {
           <Link
             key={cat.id}
             href={`/category/${cat.slug}`}
-            className="flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-100 rounded-lg hover:bg-amber-50/50 hover:border-amber-200 transition-colors group"
+            className="flex flex-col items-center justify-center p-3 bg-neutral-900 border border-neutral-800 hover:border-[#e6007e] rounded-xl hover:shadow-[0_0_12px_rgba(230,0,126,0.3)] transition-all duration-200 active:scale-95 group"
           >
-            <div className="p-2.5 rounded-full bg-white shadow-sm mb-1.5 group-hover:scale-110 transition-transform">
-              {ICON_MAP[cat.icon_name] || <Grid className="w-5 h-5 text-gray-400" />}
+            <div className="p-2.5 rounded-full bg-neutral-950 border border-[#e6007e]/30 group-hover:bg-[#e6007e] mb-1.5 group-hover:scale-110 transition-all duration-200 shadow-inner">
+              {ICON_MAP[cat.icon_name] ? (
+                // ホバー時にアイコン色を白に変える制御
+                <span className="[&>svg]:group-hover:text-white transition-colors">
+                  {ICON_MAP[cat.icon_name]}
+                </span>
+              ) : (
+                <Grid className="w-5 h-5 text-neutral-400 group-hover:text-white transition-colors" />
+              )}
             </div>
-            <span className="text-xs font-bold text-gray-800 group-hover:text-amber-600 truncate max-w-full">
+            <span className="text-xs font-bold text-slate-200 group-hover:text-[#ff2a9d] truncate max-w-full transition-colors">
               {cat.name}
             </span>
           </Link>

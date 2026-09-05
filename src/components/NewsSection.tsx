@@ -11,11 +11,11 @@ type NewsItem = {
   published_at: string;
 };
 
-// カテゴリに応じたバッジカラーのマッピング
+// ダークテーマ用のカテゴリバッジカラーマッピング
 const CATEGORY_COLORS: Record<string, string> = {
-  お知らせ: 'bg-blue-100 text-blue-700',
-  キャンペーン: 'bg-pink-100 text-pink-700',
-  障害情報: 'bg-amber-100 text-amber-700',
+  お知らせ: 'bg-cyan-950/80 text-cyan-400 border border-cyan-800/50',
+  キャンペーン: 'bg-[#e6007e]/20 text-[#ff2a9d] border border-[#e6007e]/40 shadow-[0_0_6px_rgba(230,0,126,0.3)]',
+  障害情報: 'bg-amber-950/80 text-amber-400 border border-amber-800/50',
 };
 
 export default function NewsSection() {
@@ -46,16 +46,16 @@ export default function NewsSection() {
   if (loading || newsList.length === 0) return null;
 
   return (
-    <section className="w-full py-3 bg-white">
+    <section className="w-full py-3 bg-neutral-950 border-b border-neutral-800">
       {/* 見出しエリア */}
-      <div className="flex items-center justify-between px-3 mb-2">
-        <h2 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-          <span className="w-2 h-4 bg-amber-500 rounded-full inline-block" />
+      <div className="flex items-center justify-between px-3 mb-2.5">
+        <h2 className="text-xs font-black text-white flex items-center gap-1.5">
+          <span className="w-1 h-3.5 bg-[#e6007e] rounded-full shadow-[0_0_6px_rgba(230,0,126,0.8)]" />
           お知らせ
         </h2>
         <Link
           href="/news"
-          className="text-xs text-amber-600 font-semibold hover:underline flex items-center gap-0.5"
+          className="text-xs text-[#ff2a9d] font-bold hover:text-[#ff66b8] transition-colors flex items-center gap-0.5"
         >
           一覧を見る
           <span className="text-sm">›</span>
@@ -63,7 +63,7 @@ export default function NewsSection() {
       </div>
 
       {/* お知らせリスト */}
-      <div className="px-3 divide-y divide-gray-100">
+      <div className="px-3 divide-y divide-neutral-800/60">
         {newsList.map((item) => {
           const dateStr = new Date(item.published_at).toLocaleDateString('ja-JP', {
             year: 'numeric',
@@ -75,19 +75,19 @@ export default function NewsSection() {
             <Link
               key={item.id}
               href={`/news/${item.id}`}
-              className="py-2.5 flex flex-col gap-1 hover:bg-gray-50 transition-colors rounded px-1 -mx-1"
+              className="py-2.5 flex flex-col gap-1 hover:bg-neutral-900/80 transition-all rounded-lg px-2 -mx-2 group"
             >
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-gray-400 font-medium">{dateStr}</span>
+                <span className="text-[11px] text-neutral-500 font-medium">{dateStr}</span>
                 <span
                   className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                    CATEGORY_COLORS[item.category] || 'bg-gray-100 text-gray-700'
+                    CATEGORY_COLORS[item.category] || 'bg-neutral-800 text-neutral-300 border border-neutral-700'
                   }`}
                 >
                   {item.category}
                 </span>
               </div>
-              <p className="text-xs text-gray-800 font-medium line-clamp-1">
+              <p className="text-xs text-slate-200 group-hover:text-[#ff2a9d] font-medium line-clamp-1 transition-colors">
                 {item.title}
               </p>
             </Link>

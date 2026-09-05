@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode } from 'swiper/modules';
+import { FreeMode, Mousewheel } from 'swiper/modules';
 import Link from 'next/link';
 
 import 'swiper/css';
@@ -23,7 +23,6 @@ export default function TherapistSlider() {
 
   useEffect(() => {
     const fetchTherapists = async () => {
-      // エラー回避のため is_available や sort_order の絞り込みを外し、最大8名を取得
       const { data, error } = await supabase
         .from('therapists')
         .select('*')
@@ -43,51 +42,59 @@ export default function TherapistSlider() {
   if (loading || therapists.length === 0) return null;
 
   return (
-    <section className="w-full py-3 bg-white">
+    <section className="w-full py-3 bg-neutral-950 border-b border-neutral-800">
       {/* 見出しエリア */}
-      <div className="flex items-center justify-between px-3 mb-2">
-        <h2 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-          <span className="w-2 h-4 bg-pink-500 rounded-full inline-block" />
+      <div className="flex items-center justify-between px-3 mb-2.5">
+        <h2 className="text-xs font-black text-white flex items-center gap-1.5">
+          <span className="w-1 h-3.5 bg-[#e6007e] rounded-full shadow-[0_0_6px_rgba(230,0,126,0.8)]" />
           今すぐご案内できるセラピスト
         </h2>
         <Link
           href="/therapists"
-          className="text-xs text-pink-600 font-semibold hover:underline flex items-center gap-0.5"
+          className="text-xs text-[#ff2a9d] font-bold hover:text-[#ff66b8] transition-colors flex items-center gap-0.5"
         >
           もっと見る
           <span className="text-sm">›</span>
         </Link>
       </div>
 
-      {/* 手動スライド (横スクロール) エリア */}
+      {/* スライド (横スクロール) エリア */}
       <Swiper
-        modules={[FreeMode]}
-        slidesPerView={3.4} // スマホ画面で3枚半ほど見せてスクロールを促す
+        modules={[FreeMode, Mousewheel]}
+        slidesPerView={3.4}
         spaceBetween={8}
         freeMode={true}
-        className="w-full px-3"
+        mousewheel={{ forceToAxis: true }}
+        className="w-full px-3 !pb-1"
       >
         {/* セラピスト 1〜8人目のカード */}
         {therapists.map((item) => (
           <SwiperSlide key={item.id}>
             <Link
               href={`/therapists/${item.id}`}
-              className="block group overflow-hidden rounded-md border border-gray-100 bg-gray-50"
+              className="block group overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 hover:border-[#e6007e] hover:shadow-[0_0_12px_rgba(230,0,126,0.35)] transition-all duration-200"
             >
               {/* 縦位置画像（アスペクト比 3:4） */}
-              <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-200">
+              <div className="relative w-full aspect-[3/4] overflow-hidden bg-neutral-950">
                 <img
                   src={item.image_url}
                   alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
+                {/* 即出勤・おすすめ風グラデーションオーバーレイ */}
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent opacity-80" />
               </div>
+
               {/* 名前・年齢キャプション */}
-              <div className="p-1.5 text-center">
-                <p className="text-xs font-bold text-gray-800 truncate">
+              <div className="p-2 text-center bg-neutral-900">
+                <p className="text-xs font-bold text-slate-100 group-hover:text-[#ff2a9d] truncate transition-colors">
                   {item.name}
-                  {item.age && <span className="text-[10px] font-normal text-gray-500 ml-1">({item.age})</span>}
+                  {item.age && (
+                    <span className="text-[10px] font-normal text-neutral-400 ml-1">
+                      ({item.age})
+                    </span>
+                  )}
                 </p>
               </div>
             </Link>
@@ -98,13 +105,15 @@ export default function TherapistSlider() {
         <SwiperSlide>
           <Link
             href="/therapists"
-            className="flex flex-col items-center justify-center w-full aspect-[3/4] rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+            className="flex flex-col items-center justify-center w-full aspect-[3/4] rounded-xl border border-dashed border-neutral-700 bg-neutral-900/60 text-neutral-400 hover:border-[#e6007e] hover:text-[#ff2a9d] hover:bg-neutral-900 transition-all duration-200 group"
           >
-            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-1 shadow-sm">
-              <span className="text-pink-500 text-lg font-bold">›</span>
+            <div className="w-8 h-8 rounded-full bg-neutral-950 border border-neutral-700 group-hover:border-[#e6007e] flex items-center justify-center mb-1 shadow-inner transition-colors">
+              <span className="text-[#ff2a9d] text-lg font-black group-hover:scale-125 transition-transform">
+                ›
+              </span>
             </div>
-            <span className="text-xs font-bold text-gray-700">もっと見る</span>
-            <span className="text-[10px] text-gray-400">一覧へ</span>
+            <span className="text-xs font-bold text-slate-200 group-hover:text-[#ff2a9d]">もっと見る</span>
+            <span className="text-[10px] text-neutral-500">一覧へ</span>
           </Link>
         </SwiperSlide>
       </Swiper>
