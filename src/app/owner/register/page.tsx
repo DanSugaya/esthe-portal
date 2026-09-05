@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -10,6 +10,16 @@ export default function OwnerRegisterPage() {
   const [loading, setLoading] = useState(false)
   const [agreed, setAgreed] = useState(false)
 
+  // SupabaseクライアントをMemo化して再生成を防止
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
+  )
+
   const [formData, setFormData] = useState({
     // アカウント情報
     email: '',
@@ -17,17 +27,13 @@ export default function OwnerRegisterPage() {
     // 店舗情報 (salons)
     salonName: '',
     description: '',
-    imageUrl: '',
+    headerImageUrl: '',
     // 初回メニュー情報 (menus)
-    menuTitle: '',
+    menuName: '',
+    menuDescription: '',
     menuDuration: '60',
     menuPrice: '',
   })
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,7 +72,9 @@ export default function OwnerRegisterPage() {
             owner_id: user.id,
             name: formData.salonName,
             description: formData.description,
-            image_url: formData.imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef',
+            header_image_url:
+              formData.headerImageUrl ||
+              'https://images.unsplash.com/photo-1540555700478-4be289fbecef',
             status: 'pending',
           },
         ])
@@ -75,12 +83,13 @@ export default function OwnerRegisterPage() {
 
       if (salonError) throw new Error(`店舗登録エラー: ${salonError.message}`)
 
-      // 3. menus テーブルへ初期メニュー挿入
-      if (formData.menuTitle && salonData) {
+      // 3. menus テーブルへ初期メニュー挿入（カラム名を name / description に統一）
+      if (formData.menuName && salonData) {
         const { error: menuError } = await supabase.from('menus').insert([
           {
             salon_id: salonData.id,
-            title: formData.menuTitle,
+            name: formData.menuName,
+            description: formData.menuDescription,
             duration: Number(formData.menuDuration) || 60,
             price: Number(formData.menuPrice) || 0,
           },
@@ -91,9 +100,11 @@ export default function OwnerRegisterPage() {
 
       alert('掲載申請が完了しました。審査完了までお待ちください。')
       router.push('/owner/pending')
-    } catch (err: any) {
-      console.error(err)
-      alert(err.message || '送信中にエラーが発生しました。')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(err)
+        alert(err.message || '送信中にエラーが発生しました。')
+      }
     } finally {
       setLoading(false)
     }
@@ -165,11 +176,11 @@ export default function OwnerRegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">画像URL</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">ヘッダー画像URL</label>
               <input
                 type="url"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                value={formData.headerImageUrl}
+                onChange={(e) => setFormData({ ...formData, headerImageUrl: e.target.value })}
                 className="w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="https://..."
               />
@@ -195,10 +206,20 @@ export default function OwnerRegisterPage() {
               <input
                 type="text"
                 required
-                value={formData.menuTitle}
-                onChange={(e) => setFormData({ ...formData, menuTitle: e.target.value })}
+                value={formData.menuName}
+                onChange={(e) => setFormData({ ...formData, menuName: e.target.value })}
                 className="w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="例: フェイシャル基本コース"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">メニュー説明</label>
+              <input
+                type="text"
+                value={formData.menuDescription}
+                onChange={(e) => setFormData({ ...formData, menuDescription: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="施術の簡単な内容"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

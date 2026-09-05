@@ -56,33 +56,45 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6">
+    <main className="min-h-screen bg-neutral-950 flex items-center justify-center p-4 text-slate-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-neutral-900 border border-neutral-800 p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6"
+      >
         <div>
-          <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">運営専用</span>
-          <h1 className="text-xl font-bold text-slate-800 mt-2">システム管理者ログイン</h1>
+          <span className="text-[10px] font-extrabold text-[#ff2a9d] bg-[#e6007e]/15 border border-[#e6007e]/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
+            運営専用
+          </span>
+          <h1 className="text-xl font-black text-white mt-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-[#e6007e] rounded-full shadow-[0_0_8px_rgba(230,0,126,0.8)]" />
+            システム管理者ログイン
+          </h1>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">管理者メールアドレス</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              管理者メールアドレス
+            </label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[#e6007e] focus:ring-1 focus:ring-[#e6007e] transition-all"
               placeholder="admin@example.com"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">パスワード</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              パスワード
+            </label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[#e6007e] focus:ring-1 focus:ring-[#e6007e] transition-all"
             />
           </div>
         </div>
@@ -90,7 +102,7 @@ export default function AdminLoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-sm transition disabled:opacity-50 cursor-pointer"
+          className="w-full py-3 bg-gradient-to-r from-[#e6007e] to-[#ff2a9d] hover:from-[#d00070] hover:to-[#e6007e] text-white font-bold rounded-xl text-sm shadow-[0_0_15px_rgba(230,0,126,0.4)] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
         >
           {loading ? '認証中...' : '管理者としてログイン'}
         </button>

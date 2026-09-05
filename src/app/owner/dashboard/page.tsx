@@ -1,33 +1,38 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import {
-  TrendingUp,
-  Users,
-  Calendar,
-  DollarSign,
-  Bell,
-  Search,
-  ChevronDown,
-  Plus,
-  MoreVertical,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  BarChart2,
-  Settings,
-  HelpCircle,
-  LogOut,
   Store,
+  BarChart2,
+  UtensilsCrossed,
+  LogOut,
+  Upload,
+  Image as ImageIcon,
+  Save,
+  Plus,
   Edit,
   Trash2,
-  Save,
-  UtensilsCrossed,
-  Upload,
-  Image as ImageIcon
 } from 'lucide-react';
+
+interface Salon {
+  id: string;
+  name: string;
+  description: string | null;
+  phone: string | null;
+  address: string | null;
+  header_image_url: string | null;
+  status?: string;
+}
+
+interface Menu {
+  id: string;
+  salon_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  duration: number;
+}
 
 export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'salon' | 'menus'>('overview');
@@ -35,14 +40,19 @@ export default function OwnerDashboard() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  // SupabaseクライアントはMemo化して再生成を防止
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
   );
 
   // ステートデータ
-  const [salon, setSalon] = useState<any>(null);
-  const [menus, setMenus] = useState<any[]>([]);
+  const [salon, setSalon] = useState<Salon | null>(null);
+  const [menus, setMenus] = useState<Menu[]>([]);
 
   // 店舗編集用フォームステート
   const [salonForm, setSalonForm] = useState({
@@ -53,9 +63,9 @@ export default function OwnerDashboard() {
     header_image_url: '',
   });
 
-  // メニューモーダル用ステート（すべて初期値は定義済み値）
+  // メニューモーダル用ステート
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
-  const [editingMenu, setEditingMenu] = useState<any>(null);
+  const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [menuForm, setMenuForm] = useState({
     name: '',
     description: '',
@@ -63,84 +73,122 @@ export default function OwnerDashboard() {
     duration: 60,
   });
 
-  // 1. 店舗データおよびメニューデータの初期取得
+  // 店舗データおよびメニューデータの初期取得
   useEffect(() => {
-    fetchSalonAndMenus();
-  }, []);
+    let isMounted = true;
 
-  const fetchSalonAndMenus = async () => {
+    const fetchSalonAndMenus = async () => {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: salonData, error: salonError } = await supabase
+          .from('salons')
+          .select('*')
+          .eq('owner_id', user.id)
+          .maybeSingle();
+
+        if (salonError) throw salonError;
+
+        if (isMounted && salonData) {
+          setSalon(salonData);
+          setSalonForm({
+            name: salonData.name ?? '',
+            description: salonData.description ?? '',
+            phone: salonData.phone ?? '',
+            address: salonData.address ?? '',
+            header_image_url: salonData.header_image_url ?? '',
+          });
+
+          const { data: menuData, error: menuError } = await supabase
+            .from('menus')
+            .select('*')
+            .eq('salon_id', salonData.id)
+            .order('created_at', { ascending: false });
+
+          if (menuError) throw menuError;
+          setMenus(menuData || []);
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          alert(`データ取得エラー: ${err.message}`);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchSalonAndMenus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabase]);
+
+  // 店舗データ手動再取得用の関数
+  const refreshData = async () => {
     try {
-      setLoading(true);
-      // ログインユーザー取得
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // 店舗情報取得
-      const { data: salonData, error: salonError } = await supabase
+      const { data: salonData } = await supabase
         .from('salons')
         .select('*')
         .eq('owner_id', user.id)
         .maybeSingle();
 
-      if (salonError) throw salonError;
-
       if (salonData) {
         setSalon(salonData);
-        setSalonForm({
-          name: salonData.name ?? '',
-          description: salonData.description ?? '',
-          phone: salonData.phone ?? '',
-          address: salonData.address ?? '',
-          header_image_url: salonData.header_image_url ?? '',
-        });
-
-        // メニュー一覧取得
-        const { data: menuData, error: menuError } = await supabase
+        const { data: menuData } = await supabase
           .from('menus')
           .select('*')
           .eq('salon_id', salonData.id)
           .order('created_at', { ascending: false });
 
-        if (menuError) throw menuError;
         setMenus(menuData || []);
       }
-    } catch (err: any) {
-      alert(`データ取得エラー: ${err.message}`);
-    } finally {
-      setLoading(false);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('データ更新失敗:', err.message);
+      }
     }
   };
 
   // 店舗ヘッダー画像のアップロード処理
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      setUploading(true);
+      if (!salon?.id) {
+        alert('店舗情報が存在しません。');
+        return;
+      }
       if (!e.target.files || e.target.files.length === 0) return;
 
+      setUploading(true);
       const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const filePath = `headers/${salon.id}-${Math.random()}.${fileExt}`;
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `headers/${salon.id}/${fileName}`;
 
-      // Supabase Storage にアップロード
       const { error: uploadError } = await supabase.storage
         .from('salons')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // 公開用URLを取得
       const { data } = supabase.storage.from('salons').getPublicUrl(filePath);
-
       setSalonForm((prev) => ({ ...prev, header_image_url: data.publicUrl }));
       alert('画像をアップロードしました。');
-    } catch (err: any) {
-      alert(`画像アップロードエラー: ${err.message}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(`画像アップロードエラー: ${err.message}`);
+      }
     } finally {
       setUploading(false);
     }
   };
 
-  // 2. 店舗情報の保存（salons 更新）
+  // 店舗情報の保存
   const handleSaveSalon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!salon?.id) return;
@@ -160,16 +208,18 @@ export default function OwnerDashboard() {
 
       if (error) throw error;
       alert('店舗情報を更新しました。');
-      fetchSalonAndMenus();
-    } catch (err: any) {
-      alert(`更新エラー: ${err.message}`);
+      await refreshData();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(`更新エラー: ${err.message}`);
+      }
     } finally {
       setSaving(false);
     }
   };
 
-  // 3. メニューモーダルの開閉（null/undefined を空文字で保護）
-  const openMenuModal = (menu: any = null) => {
+  // メニューモーダルの開閉
+  const openMenuModal = (menu: Menu | null = null) => {
     if (menu) {
       setEditingMenu(menu);
       setMenuForm({
@@ -185,7 +235,7 @@ export default function OwnerDashboard() {
     setIsMenuModalOpen(true);
   };
 
-  // 4. メニューの保存（新規追加 または 更新）
+  // メニューの保存（新規追加 または 更新）
   const handleSaveMenu = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!salon?.id) return;
@@ -193,7 +243,6 @@ export default function OwnerDashboard() {
 
     try {
       if (editingMenu) {
-        // 更新
         const { error } = await supabase
           .from('menus')
           .update({
@@ -207,7 +256,6 @@ export default function OwnerDashboard() {
         if (error) throw error;
         alert('メニューを更新しました。');
       } else {
-        // 新規作成
         const { error } = await supabase
           .from('menus')
           .insert({
@@ -223,15 +271,17 @@ export default function OwnerDashboard() {
       }
 
       setIsMenuModalOpen(false);
-      fetchSalonAndMenus();
-    } catch (err: any) {
-      alert(`保存エラー: ${err.message}`);
+      await refreshData();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(`保存エラー: ${err.message}`);
+      }
     } finally {
       setSaving(false);
     }
   };
 
-  // 5. メニューの削除
+  // メニューの削除
   const handleDeleteMenu = async (menuId: string) => {
     if (!confirm('このメニューを削除してもよろしいですか？')) return;
 
@@ -243,9 +293,11 @@ export default function OwnerDashboard() {
 
       if (error) throw error;
       alert('メニューを削除しました。');
-      fetchSalonAndMenus();
-    } catch (err: any) {
-      alert(`削除エラー: ${err.message}`);
+      await refreshData();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(`削除エラー: ${err.message}`);
+      }
     }
   };
 
@@ -280,30 +332,33 @@ export default function OwnerDashboard() {
         <nav className="flex-1 p-4 space-y-1">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'overview'
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'overview'
                 ? 'bg-indigo-600 text-white'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
+            }`}
           >
             <BarChart2 className="h-5 w-5" />
             ダッシュボード
           </button>
           <button
             onClick={() => setActiveTab('salon')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'salon'
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'salon'
                 ? 'bg-indigo-600 text-white'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
+            }`}
           >
             <Store className="h-5 w-5" />
             店舗情報編集
           </button>
           <button
             onClick={() => setActiveTab('menus')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'menus'
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'menus'
                 ? 'bg-indigo-600 text-white'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
+            }`}
           >
             <UtensilsCrossed className="h-5 w-5" />
             メニュー管理
@@ -358,7 +413,7 @@ export default function OwnerDashboard() {
             </div>
           )}
 
-          {/* TAB 2: 店舗情報編集（salons） */}
+          {/* TAB 2: 店舗情報編集 */}
           {activeTab === 'salon' && (
             <div className="max-w-2xl bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-6">
               <div>
@@ -367,7 +422,6 @@ export default function OwnerDashboard() {
               </div>
 
               <form onSubmit={handleSaveSalon} className="space-y-4">
-                {/* 店舗イメージヘッダープレビュー & アップロード */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-2">店舗イメージヘッダー</label>
                   <div className="relative w-full h-48 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center group">
@@ -384,7 +438,6 @@ export default function OwnerDashboard() {
                       </div>
                     )}
 
-                    {/* アップロード用ボタンオーバーレイ */}
                     <label className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white text-xs font-bold gap-2">
                       <Upload className="h-4 w-4" />
                       {uploading ? 'アップロード中...' : '画像を変換・変更'}
@@ -404,7 +457,7 @@ export default function OwnerDashboard() {
                   <input
                     type="text"
                     required
-                    value={salonForm.name || ''}
+                    value={salonForm.name}
                     onChange={(e) => setSalonForm({ ...salonForm, name: e.target.value })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   />
@@ -414,7 +467,7 @@ export default function OwnerDashboard() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">説明文</label>
                   <textarea
                     rows={4}
-                    value={salonForm.description || ''}
+                    value={salonForm.description}
                     onChange={(e) => setSalonForm({ ...salonForm, description: e.target.value })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                     placeholder="店舗のコンセプトやアピールポイント"
@@ -426,7 +479,7 @@ export default function OwnerDashboard() {
                     <label className="block text-xs font-bold text-slate-700 mb-1">電話番号</label>
                     <input
                       type="text"
-                      value={salonForm.phone || ''}
+                      value={salonForm.phone}
                       onChange={(e) => setSalonForm({ ...salonForm, phone: e.target.value })}
                       className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="03-1234-5678"
@@ -436,7 +489,7 @@ export default function OwnerDashboard() {
                     <label className="block text-xs font-bold text-slate-700 mb-1">住所</label>
                     <input
                       type="text"
-                      value={salonForm.address || ''}
+                      value={salonForm.address}
                       onChange={(e) => setSalonForm({ ...salonForm, address: e.target.value })}
                       className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="東京都港区..."
@@ -458,7 +511,7 @@ export default function OwnerDashboard() {
             </div>
           )}
 
-          {/* TAB 3: メニュー管理（menus） */}
+          {/* TAB 3: メニュー管理 */}
           {activeTab === 'menus' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -475,7 +528,6 @@ export default function OwnerDashboard() {
                 </button>
               </div>
 
-              {/* メニューテーブル */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <table className="w-full text-left text-sm text-slate-600">
                   <thead className="bg-slate-50 text-xs text-slate-500 font-semibold border-b border-slate-200">
@@ -544,7 +596,7 @@ export default function OwnerDashboard() {
                 <input
                   type="text"
                   required
-                  value={menuForm.name || ''}
+                  value={menuForm.name}
                   onChange={(e) => setMenuForm({ ...menuForm, name: e.target.value })}
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   placeholder="施術メニュー"
@@ -555,7 +607,7 @@ export default function OwnerDashboard() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">説明</label>
                 <textarea
                   rows={3}
-                  value={menuForm.description || ''}
+                  value={menuForm.description}
                   onChange={(e) => setMenuForm({ ...menuForm, description: e.target.value })}
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   placeholder="施術内容の詳細"
@@ -569,7 +621,7 @@ export default function OwnerDashboard() {
                     type="number"
                     required
                     min={0}
-                    value={menuForm.price ?? 0}
+                    value={menuForm.price}
                     onChange={(e) => setMenuForm({ ...menuForm, price: Number(e.target.value) })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   />
@@ -580,7 +632,7 @@ export default function OwnerDashboard() {
                     type="number"
                     required
                     min={0}
-                    value={menuForm.duration ?? 60}
+                    value={menuForm.duration}
                     onChange={(e) => setMenuForm({ ...menuForm, duration: Number(e.target.value) })}
                     className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
                   />
