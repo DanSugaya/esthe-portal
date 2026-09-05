@@ -21,7 +21,6 @@ export default function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
       '@type': 'ListItem',
       position: index + 1,
       name: item.label,
-      // hrefが存在する場合はドメイン付きURLにするのが理想ですが、相対パスでも評価されます
       item: item.href ? `https://yourdomain.com${item.href}` : undefined
     }))
   }
@@ -32,20 +31,20 @@ export default function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <nav aria-label="Breadcrumb" className="w-full bg-gray-50 border-b border-gray-200 py-2 px-3">
-        <ol className="flex items-center flex-wrap gap-1 text-[11px] text-gray-600">
+      <nav aria-label="Breadcrumb" className="w-full bg-black border-b border-zinc-800 py-2 px-3">
+        <ol className="flex items-center flex-wrap gap-1 text-[11px]">
           {allItems.map((item, index) => {
             const isLast = index === allItems.length - 1
 
             return (
               <li key={index} className="flex items-center gap-1">
-                {index > 0 && <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />}
+                {index > 0 && <ChevronRight className="w-3 h-3 text-zinc-600 shrink-0" />}
                 {isLast || !item.href ? (
-                  <span className="font-bold text-gray-800 line-clamp-1 max-w-[150px]" aria-current="page">
+                  <span className="font-bold text-pink-400 line-clamp-1 max-w-[150px]" aria-current="page">
                     {item.label}
                   </span>
                 ) : (
-                  <Link href={item.href} className="hover:underline text-gray-500 line-clamp-1">
+                  <Link href={item.href} className="text-zinc-400 hover:text-pink-500 hover:underline line-clamp-1 transition-colors">
                     {item.label}
                   </Link>
                 )}
