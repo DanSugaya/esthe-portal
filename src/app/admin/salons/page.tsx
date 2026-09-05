@@ -14,12 +14,19 @@ export default function AdminSalonsPage() {
 
   const fetchPendingSalons = async () => {
     setLoading(true)
+    
+    // description を除外して安全にカラム取得
     const { data, error } = await supabase
       .from('salons')
-      .select('*')
+      .select('id, name, status, address, created_at')
       .eq('status', 'pending')
 
-    if (!error && data) setSalons(data)
+    if (error) {
+      console.error('承認待ちサロン一覧の取得エラー:', error.message)
+    } else if (data) {
+      setSalons(data)
+    }
+    
     setLoading(false)
   }
 
@@ -27,7 +34,7 @@ export default function AdminSalonsPage() {
     fetchPendingSalons()
   }, [])
 
-  const handleApprove = async (salonId: string) => {
+  const handleApprove = async (salonId: string | number) => {
     const { error } = await supabase
       .from('salons')
       .update({ status: 'approved' })
@@ -69,7 +76,9 @@ export default function AdminSalonsPage() {
             >
               <div className="space-y-1.5 min-w-0">
                 <h2 className="font-bold text-base text-white truncate">{salon.name}</h2>
-                <p className="text-xs text-neutral-400 line-clamp-2">{salon.description}</p>
+                {salon.address && (
+                  <p className="text-xs text-neutral-400 line-clamp-1">{salon.address}</p>
+                )}
                 <div className="pt-1">
                   <span className="text-[10px] font-bold bg-amber-950/80 text-amber-400 border border-amber-800/60 px-2.5 py-0.5 rounded-md inline-block">
                     ステータス: {salon.status}

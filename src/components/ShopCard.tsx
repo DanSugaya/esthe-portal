@@ -41,7 +41,7 @@ export default function ShopCard({ salon, maxTherapists = 6 }: ShopCardProps) {
             {salon.name}
           </h2>
           <p className="text-sm text-neutral-400 line-clamp-2 mb-3">
-            {salon.description || '説明はありません'}
+            {salon.catchphrase || '説明はありません'}
           </p>
         </Link>
 
