@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PlusCircle, Image as ImageIcon, ExternalLink, ArrowUpDown, Trash2, Eye, EyeOff, LayoutGrid } from 'lucide-react'
+import { PlusCircle, Image as ImageIcon, ExternalLink, ArrowUpDown, Trash2, Eye, EyeOff, LayoutGrid, Upload, Loader2, X, Check } from 'lucide-react'
 
 type Banner = {
   id: string
@@ -22,7 +22,11 @@ export default function AdminBannersPage() {
   const [sortOrder, setSortOrder] = useState(1)
   const [type, setType] = useState<'main' | 'sub'>('main')
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
   const loadBanners = async () => {
@@ -38,9 +42,43 @@ export default function AdminBannersPage() {
     loadBanners()
   }, [])
 
+  // 画像アップロード処理
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`
+      const filePath = `banner-images/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('banners')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false })
+
+      if (uploadError) throw uploadError
+
+      const { data: publicUrlData } = supabase.storage
+        .from('banners')
+        .getPublicUrl(filePath)
+
+      setImageUrl(publicUrlData.publicUrl)
+    } catch (error: any) {
+      alert('画像のアップロードに失敗しました: ' + error.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   // 新規追加
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!imageUrl) {
+      alert('画像をアップロードするか、URLを入力してください')
+      return
+    }
+
     setSubmitting(true)
     const { error } = await supabase.from('banners').insert([
       {
@@ -58,11 +96,34 @@ export default function AdminBannersPage() {
       setImageUrl('')
       setLinkUrl('')
       setSortOrder(1)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       loadBanners()
     } else {
       alert('登録に失敗しました: ' + error.message)
     }
     setSubmitting(false)
+  }
+
+  // 表示順（sort_order）のリアルタイム更新
+  const handleSortOrderChange = (id: string, newOrder: number) => {
+    setBanners((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, sort_order: newOrder } : b))
+    )
+  }
+
+  // 表示順のDB保存処理
+  const updateSortOrder = async (id: string, newOrder: number) => {
+    setUpdatingId(id)
+    const { error } = await supabase
+      .from('banners')
+      .update({ sort_order: newOrder })
+      .eq('id', id)
+
+    if (error) {
+      alert('表示順の更新に失敗しました: ' + error.message)
+    }
+    setUpdatingId(null)
+    loadBanners()
   }
 
   // 表示/非表示切り替え
@@ -183,19 +244,96 @@ export default function AdminBannersPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-zinc-300 mb-1.5 flex items-center gap-1">
-              <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
-              画像URL
-            </label>
-            <input
-              type="url"
-              required
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all"
-              placeholder="https://..."
-            />
+          {/* 画像指定エリア */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-zinc-300 flex items-center gap-1">
+                <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
+                バナー画像
+              </label>
+              <div className="flex items-center gap-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setImageMode('upload')}
+                  className={`px-2 py-0.5 rounded transition-colors ${
+                    imageMode === 'upload' ? 'bg-pink-950 text-pink-300 border border-pink-700/50' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  ファイル選択
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageMode('url')}
+                  className={`px-2 py-0.5 rounded transition-colors ${
+                    imageMode === 'url' ? 'bg-pink-950 text-pink-300 border border-pink-700/50' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  URL指定
+                </button>
+              </div>
+            </div>
+
+            {imageMode === 'upload' ? (
+              <div className="space-y-3">
+                {imageUrl ? (
+                  <div className="relative p-2 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center gap-4">
+                    <img
+                      src={imageUrl}
+                      alt="アップロードプレビュー"
+                      className="w-24 h-16 object-cover rounded-lg border border-zinc-800"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-zinc-200 truncate">アップロード済み</p>
+                      <p className="text-[10px] text-zinc-500 truncate">{imageUrl}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl('')}
+                      className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-colors"
+                      title="画像を解除"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-zinc-800 hover:border-pink-500/50 bg-zinc-950/60 hover:bg-zinc-900/40 rounded-xl cursor-pointer transition-all">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-6 h-6 text-pink-500 animate-spin mb-2" />
+                          <p className="text-xs text-zinc-400">アップロード中...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-zinc-400 mb-2" />
+                          <p className="text-xs text-zinc-300 font-bold mb-1">
+                            クリックして画像を選択
+                          </p>
+                          <p className="text-[10px] text-zinc-500">PNG, JPG, WEBP など</p>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+            ) : (
+              <input
+                type="url"
+                required
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all"
+                placeholder="https://..."
+              />
+            )}
           </div>
 
           <div>
@@ -215,7 +353,7 @@ export default function AdminBannersPage() {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || uploading}
             className="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-pink-950/60 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             <PlusCircle className="w-4 h-4" />
@@ -271,9 +409,6 @@ export default function AdminBannersPage() {
                         <span className="text-xs font-bold text-white group-hover:text-pink-400 transition-colors truncate">
                           {b.title}
                         </span>
-                        <span className="text-[10px] text-zinc-500 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
-                          順序: {b.sort_order}
-                        </span>
                       </div>
 
                       <p className="text-[11px] text-zinc-400 truncate max-w-xs sm:max-w-md flex items-center gap-1">
@@ -283,7 +418,30 @@ export default function AdminBannersPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                    {/* 順序（sort_order）編集エリア */}
+                    <div className="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1">
+                      <span className="text-[10px] text-zinc-500 font-bold whitespace-nowrap">順序:</span>
+                      <input
+                        type="number"
+                        value={b.sort_order}
+                        onChange={(e) => handleSortOrderChange(b.id, Number(e.target.value))}
+                        onBlur={(e) => updateSortOrder(b.id, Number(e.target.value))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.currentTarget.blur()
+                          }
+                        }}
+                        className="w-12 bg-transparent text-xs text-white font-bold text-center focus:outline-none focus:text-pink-400"
+                      />
+                      {updatingId === b.id ? (
+                        <Loader2 className="w-3 h-3 text-pink-500 animate-spin" />
+                      ) : (
+                        <Check className="w-3 h-3 text-zinc-600" />
+                      )}
+                    </div>
+
+                    {/* 表示/非表示切替 */}
                     <button
                       onClick={() => toggleActive(b.id, b.is_active)}
                       className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border ${
@@ -305,6 +463,7 @@ export default function AdminBannersPage() {
                       )}
                     </button>
 
+                    {/* 削除 */}
                     <button
                       onClick={() => handleDelete(b.id)}
                       className="p-2 text-xs font-bold rounded-xl bg-zinc-950 text-zinc-400 border border-zinc-800 hover:border-red-900/80 hover:bg-red-950/30 hover:text-red-400 transition-all cursor-pointer"
